@@ -79,23 +79,16 @@ export class ItemViewModel {
     )
 
     this.state$ = item$.pipe(
-      filter(
-        item =>
-          item &&
-          item.state !== SegmentState.Removing &&
-          item.state !== SegmentState.Idle
-      ),
-      map(item =>
-        item
-          ? {
-              yValue: item.rowIndex * CELL_SIZE,
-              xValue: item.start * CELL_SIZE,
-              widthValue: (item.end - item.start) * CELL_SIZE,
-              opacityValue: 0.8,
-              colorValue: item.color
-            }
-          : initialStateValue
-      )
+      map(item => {
+        if (!item || item.state === SegmentState.Idle) return initialStateValue
+        return {
+          yValue: item.rowIndex * CELL_SIZE,
+          xValue: item.start * CELL_SIZE,
+          widthValue: (item.end - item.start) * CELL_SIZE,
+          opacityValue: 0.8,
+          colorValue: item.color
+        }
+      })
     )
   }
 

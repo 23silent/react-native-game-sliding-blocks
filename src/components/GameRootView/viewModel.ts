@@ -22,6 +22,9 @@ export class RootViewModel {
   private busy: boolean = false
   private rows: PathSegment[][] = []
 
+  /** Incremented on restart so in-flight applyTask can bail out */
+  private applyVersion: number = 0
+
   public items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
     KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
   )
@@ -61,10 +64,13 @@ export class RootViewModel {
   }
 
   private applyTask = async (tasks: ReturnType<typeof prepareTasks>) => {
+    const versionAtStart = this.applyVersion
     this.setBusy(true)
 
     let hasRemoves = false
     for (let index = 0; index < tasks.length; index++) {
+      if (this.applyVersion !== versionAtStart) return
+
       const {
         rows,
         newState: newItems,
@@ -117,11 +123,14 @@ export class RootViewModel {
       } else {
         await delay(50)
       }
+      if (this.applyVersion !== versionAtStart) return
     }
 
     if (this.rows.filter(row => row.length).length === ROWS_COUNT) {
       this.restart()
     }
+
+    if (this.applyVersion !== versionAtStart) return
 
     if (!hasRemoves) {
       this.comboStreak = 0
@@ -180,7 +189,12 @@ export class RootViewModel {
   }
 
   restart = () => {
+    this.applyVersion++
     this.taskQueue = []
+    this.tempRemoveQueue.clear()
+    this.nextOverwriteIndex = 0
+    this.rows = []
+
     this.items$.next(
       KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
     )
@@ -188,6 +202,9 @@ export class RootViewModel {
     this.scoreSubject$.next(0)
     this.multiplierSubject$.next(1)
     this.comboStreak = 0
+
+    this.setActiveItem(undefined)
+    this.setTranslateX(0)
 
     this.setBusy(false)
     this.processData.initializeWithGenerated()
