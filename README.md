@@ -19,7 +19,7 @@ React Native is rarely the first tool that comes to mind for game development, b
 
 ### Architecture
 
-The app uses an **MVVM-style** setup with RxJS for reactive state. ViewModels hold the game logic; Views subscribe to streams for updates. A `ProcessData` service runs the game loop: fit (gravity) → remove (clear rows) → add (new rows), with gesture handling for drag input. Clean separation of concerns and easy to extend.
+The app uses **MVVM** with RxJS and Reanimated. ViewModels hold game logic; Views render Skia Canvas nodes driven by SharedValues. A single **Engine** facade composes ViewModels and exposes a React-agnostic API. See [Architectural Concepts](#architectural-concepts) below for the key design principles.
 
 ## Stack
 
@@ -36,15 +36,38 @@ The app uses an **MVVM-style** setup with RxJS for reactive state. ViewModels ho
 
 **Requirements**: Node.js ≥ 22.11.0 (you’ll need this before running the app)
 
+## Architectural Concepts
+
+The architecture is built around a few core principles:
+
+- **No React commits during gameplay** — Game state (score, items, gestures, overlays) is held in RxJS streams and Reanimated SharedValues. The bridge (`useEngineBridge`) subscribes to RxJS and writes into SharedValues. React components never call `setState` or `useReducer` for game logic. Re-renders only occur on mount and rare layout changes (e.g. rotation).
+
+- **Pre-rendered UI** — The Skia Canvas declares all nodes (grid, 48 item slots, ghost, indicator, game-over overlay) upfront. Nothing is conditionally mounted from game state. Visibility and position are driven purely by SharedValues. No `{condition && <Component />}` that would trigger reconciliation.
+
+- **Single binding point** — One `useEngineBridge` hook wires all engine streams to SharedValues. No per-component subscriptions or BinderHooks. Subscriptions are created once and cleaned up on unmount.
+
+- **React-agnostic engine** — `GameEngine` and its ViewModels (GameViewModel, GestureCoordinator, ItemViewModel) have no React or Reanimated imports. They can be unit-tested without a renderer and reused from non-React entry points.
+
+- **MVVM layering** — **Model** (domain: ProcessData, fit, remove, generate, types). **ViewModels** (presentation: GameViewModel, GestureCoordinator, ItemViewModel, GameEngine). **Binding** (engine: RxJS → SharedValues). **View** (React components that render the Canvas).
+
+### Reusing for New Games
+
+The **`core/`** folder holds game-agnostic pieces you can copy into new projects:
+
+- **`core/binding/`** — `BinderHook`, `DisposeBag`, `useStreamBridge` for RxJS → SharedValues
+- **`core/CONCEPTS.md`** — Describes the patterns, how to apply them, and a step-by-step recipe for a new game
+
+Use `core` for the bridge pattern; keep game logic (model, viewmodels, engine) in your game module.
+
 ## Performance & Technical Approach
 
 We aimed for **smooth, responsive gameplay** and leaned on a few solid patterns:
 
 - **Skia rendering** — `@shopify/react-native-skia` uses the same 2D engine as Chrome. Drawing happens on the native thread, so we avoid flooding the JS bridge.
 - **Reanimated + Worklets** — Animations and gesture feedback run on the UI thread. Touch feels instant, and we steer clear of JS-thread jank.
-- **Reactive state** — RxJS streams drive game logic and UI updates. ViewModels keep heavy work off the render path.
+- **Reactive state** — RxJS streams drive game logic. SharedValues drive the UI. The bridge is the only place that connects them.
+- **Pre-rendered canvas** — All Skia nodes exist from the start; SharedValues control opacity, position, and size. No reconciliation from game state.
 - **Batched processing** — The game loop uses batched tasks and binary search for gap/overlap checks, keeping per-frame work light.
-- **Memoization** — `memo()` and `useDerivedValue` cut down unnecessary re-renders and recalculations.
 - **TypeScript** — Strict typing and clear interfaces for safer refactors and predictable behavior.
 
 All of that adds up to smooth 60fps, snappy touch response, and efficient resource use on both iOS and Android.
@@ -76,28 +99,22 @@ Here’s what powers the game under the hood:
 
 ## Project Structure
 
-A quick overview of where things live:
-
 ```
 ├── src/
-│   ├── App.tsx                 # App root, providers, background
-│   ├── components/
-│   │   ├── GameRootView/       # Main game UI, score, restart, layout
-│   │   ├── GameGestureView/    # Gesture handling, pan/tap, container
-│   │   ├── Grid.tsx            # Skia grid overlay
-│   │   ├── Ghost/              # Ghost preview of selected block
-│   │   ├── Indicator/          # Visual feedback
-│   │   └── Item/               # Block rendering & animation
-│   ├── hooks/                  # useBlocks (block assets)
-│   ├── services/
-│   │   └── processData.ts      # Game loop: fit, remove, add
-│   ├── utils/                  # fit, remove, generate, rx, delay, etc.
-│   ├── consts.ts               # Grid size, cell size, config
-│   └── types.ts                # PathSegment, ProcessorState, etc.
-├── ios/                        # iOS native project
-├── android/                    # Android native project
-├── index.js                    # Entry point
-└── app.json                    # App metadata
+│   ├── core/                   # Reusable across games (see core/CONCEPTS.md)
+│   │   ├── binding/            # BinderHook, DisposeBag, useStreamBridge
+│   │   └── CONCEPTS.md         # No commits, pre-rendered UI, patterns, recipe for new games
+│   ├── model/                  # Domain layer
+│   ├── viewmodels/             # Presentation logic
+│   ├── engine/                 # Game-specific binding (uses core)
+│   ├── components/             # View layer
+│   ├── hooks/
+│   ├── utils/
+│   ├── consts.ts, types.ts     # Re-exports from model
+├── ios/
+├── android/
+├── index.js
+└── app.json
 ```
 
 ## Getting Started

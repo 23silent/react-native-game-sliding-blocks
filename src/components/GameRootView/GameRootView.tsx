@@ -1,41 +1,28 @@
-import {
-  Canvas,
-  Fill,
-  Group,
-  Image,
-  RoundedRect,
-  Text,
-  useImage
-} from '@shopify/react-native-skia'
-import React, { memo, useEffect, useMemo, useState } from 'react'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import { useDerivedValue, useSharedValue } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+
 import {
   CELL_SIZE,
   COLUMNS_COUNT,
-  KEYS,
   PADDING,
   ROWS_COUNT
-} from '../../consts'
+} from '../../model/consts'
+import { GameEngine, useEngineBridge, useSharedValuesMap } from '../../engine'
 import { useBlocks } from '../../hooks/useBlocks'
-import { BinderHook, DisposeBag } from '../../utils/rx'
-import { fonts } from '../../utils/fonts'
-import { GameGestureView } from '../GameGestureView'
-import { GameOverOverlay, hitTestRestart as hitTestGameOverRestart } from '../GameOverOverlay'
-import { Ghost } from '../Ghost'
-import { Grid } from '../Grid'
-import { Indicator } from '../Indicator'
-import { Item } from '../Item'
-import { ItemViewModel } from '../Item/viewModel'
-import { RootViewModel } from './viewModel'
+import { GameCanvas } from '../GameCanvas'
+import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
+import { hitTestRestart as hitTestGameOverRestart } from '../../utils/gameOverHitTest'
 
 const ACTIONS_BAR_HEIGHT = 70
 const DIVIDER_HEIGHT = 12
 const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
 const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
-const getTopRestartBounds = (layout: { contentTop: number; actionsBarLeft: number }) => ({
+
+const getTopRestartBounds = (layout: {
+  contentTop: number
+  actionsBarLeft: number
+}) => ({
   left: layout.actionsBarLeft + 10,
   right: layout.actionsBarLeft + 110,
   top: layout.contentTop + 15,
@@ -54,26 +41,9 @@ const hitTestTopRestart = (
 export const GameRootView = memo((): React.JSX.Element => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const insets = useSafeAreaInsets()
-  const translateX = useSharedValue(0)
 
-  const [rootViewModel] = useState(() => new RootViewModel())
-  const itemViewModels = useMemo(
-    () =>
-      KEYS.reduce(
-        (acc, key) => {
-          acc[key] = new ItemViewModel(key, rootViewModel)
-          return acc
-        },
-        {} as Record<string, ItemViewModel>
-      ),
-    [rootViewModel]
-  )
-  const restart = rootViewModel.restart
-
-  const score = useSharedValue(0)
-  const multiplier = useSharedValue(0)
-
-  const bgImage = useImage(require('../../assets/bg.jpg'))
+  const [engine] = useState(() => new GameEngine())
+  const shared = useSharedValuesMap()
   const block = useBlocks()
 
   const layout = useMemo(() => {
@@ -94,128 +64,49 @@ export const GameRootView = memo((): React.JSX.Element => {
     }
   }, [screenWidth, screenHeight, insets])
 
-  useEffect(() => {
-    const binder = BinderHook()
-    const disposeBag = new DisposeBag()
+  const onCompleteEnd = useCallback(
+    (updated?: import('../../model/types').PathSegment[][]) => {
+      engine.setActiveItem(undefined)
+      engine.onAnimationFinish()
+      if (updated) engine.onCompleteGesture(updated)
+    },
+    [engine]
+  )
 
-    binder
-      .bindAction(rootViewModel.score$, value => {
-        score.value = value
-      })
-      .bindAction(rootViewModel.multiplier$, value => {
-        multiplier.value = value
-      })
-      .disposeBy(disposeBag)
+  useEngineBridge(engine, shared, { onCompleteEnd })
 
-    return () => disposeBag.dispose()
-  }, [])
-
-  const scoreText = useDerivedValue(() => `${Math.round(score.value)}`)
-  const multiplierText = useDerivedValue(() => `${Math.round(multiplier.value)}`)
+  const handleTapOrRestart = useCallback(
+    (x: number, y: number): boolean => {
+      if (hitTestTopRestart(x, y, layout)) {
+        engine.restart()
+        return true
+      }
+      const gameOver = engine.getGameOver()
+      if (
+        gameOver &&
+        hitTestGameOverRestart(x - layout.gameAreaX, y - layout.gameAreaY)
+      ) {
+        engine.restart()
+        return true
+      }
+      return false
+    },
+    [engine, layout]
+  )
 
   return (
-    <GameGestureView
-      translateX={translateX}
-      rootViewModel={rootViewModel}
+    <GameGestureViewEngine
+      engine={engine}
       layout={layout}
-      onTapOrRestart={(x, y) => {
-        if (hitTestTopRestart(x, y, layout)) {
-          restart()
-          return true
-        }
-        const gameOver = rootViewModel.getGameOver()
-        if (
-          gameOver &&
-          hitTestGameOverRestart(x - layout.gameAreaX, y - layout.gameAreaY)
-        ) {
-          restart()
-          return true
-        }
-        return false
-      }}
+      onTapOrRestart={handleTapOrRestart}
     >
-      <Canvas style={{ flex: 1 }}>
-        {bgImage ? (
-          <Image
-            image={bgImage}
-            x={0}
-            y={0}
-            width={screenWidth}
-            height={screenHeight}
-            fit="cover"
-          />
-        ) : (
-          <Fill color="rgba(200,200,200,0.5)" />
-        )}
-        <Fill color="rgba(255,255,255,0.3)" />
-        <Group transform={[{ translateY: layout.contentTop }]}>
-          <RoundedRect
-            x={layout.actionsBarLeft}
-            y={0}
-            width={layout.actionsBarWidth}
-            height={ACTIONS_BAR_HEIGHT - 20}
-            r={10}
-            color="rgba(0,0,0,0.4)"
-          />
-          <Text
-            text="Restart"
-            font={fonts.button}
-            x={layout.actionsBarLeft + 20}
-            y={38}
-            color="white"
-          />
-          <Text
-            text="Score"
-            font={fonts.label}
-            x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 80}
-            y={18}
-            color="white"
-          />
-          <Text
-            text={scoreText}
-            font={fonts.score}
-            x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 60}
-            y={42}
-            color="white"
-          />
-          <Text
-            text="Multiplier"
-            font={fonts.label}
-            x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 10}
-            y={18}
-            color="white"
-          />
-          <Text
-            text={multiplierText}
-            font={fonts.score}
-            x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 30}
-            y={42}
-            color="white"
-          />
-        </Group>
-        <Group transform={[{ translateX: layout.gameAreaX }, { translateY: layout.gameAreaY }]}>
-          <RoundedRect
-            x={0}
-            y={0}
-            width={GAME_WIDTH}
-            height={GAME_HEIGHT}
-            r={10}
-            color="transparent"
-          />
-          <Grid />
-          <Indicator rootViewModel={rootViewModel} translateX={translateX} />
-          <Ghost rootViewModel={rootViewModel} block={block} />
-          {KEYS.map(key => (
-            <Item
-              key={key}
-              block={block}
-              translateX={translateX}
-              viewModel={itemViewModels[key]}
-            />
-          ))}
-          <GameOverOverlay rootViewModel={rootViewModel} />
-        </Group>
-      </Canvas>
-    </GameGestureView>
+      <GameCanvas
+        shared={shared}
+        layout={layout}
+        block={block}
+        screenWidth={screenWidth}
+        screenHeight={screenHeight}
+      />
+    </GameGestureViewEngine>
   )
 })

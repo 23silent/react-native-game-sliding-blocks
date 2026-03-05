@@ -1,6 +1,6 @@
 import { useImage } from '@shopify/react-native-skia'
 
-import type { BlockMap } from '../types'
+import type { BlockMap } from '../model/types'
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 export const useBlocks = (): BlockMap => {

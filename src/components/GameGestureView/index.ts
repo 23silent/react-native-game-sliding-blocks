@@ -1,1 +1,1 @@
-export * from './GameGestureView'
+export { GameGestureViewEngine } from './GameGestureViewEngine'
