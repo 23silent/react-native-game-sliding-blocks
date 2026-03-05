@@ -84,6 +84,7 @@ export class GameViewModel {
   }
 
   restart = (): void => {
+    const wasGameOver = this.gameOverSubject$.getValue() !== null
     this.gameOverSubject$.next(null)
     this.applyVersion++
     this.taskQueue = []
@@ -94,7 +95,12 @@ export class GameViewModel {
     this.items$.next(
       KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
     )
-    this.scoreSubject$.next(0)
+    // When restarting from game over, defer score reset until overlay fades
+    if (wasGameOver) {
+      setTimeout(() => this.scoreSubject$.next(0), 250)
+    } else {
+      this.scoreSubject$.next(0)
+    }
     this.multiplierSubject$.next(1)
     this.comboStreak = 0
 
@@ -165,7 +171,8 @@ export class GameViewModel {
     }
 
     if (this.rows.filter(row => row.length).length === ROWS_COUNT) {
-      this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
+      const finalScore = this.scoreSubject$.getValue()
+      this.gameOverSubject$.next({ score: finalScore })
       this.setBusy(false)
       return
     }
