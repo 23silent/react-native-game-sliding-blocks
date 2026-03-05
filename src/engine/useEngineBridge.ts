@@ -4,7 +4,7 @@ import { scheduleOnRN } from 'react-native-worklets'
 
 import { BinderHook, useStreamBridge } from '../core/binding'
 import { ANIM } from '../model/animConsts'
-import { CELL_SIZE, KEYS } from '../model/consts'
+import { CELL_SIZE, EXPLOSION_POOL_SIZE, KEYS } from '../model/consts'
 import type { PathSegment } from '../model/types'
 import { ItemViewModel } from '../viewmodels/ItemViewModel'
 import type { IGameEngine } from '../viewmodels'
@@ -23,6 +23,7 @@ export function useEngineBridge(
   const { onCompleteEnd } = options
   const onCompleteEndRef = useRef(onCompleteEnd)
   onCompleteEndRef.current = onCompleteEnd
+  const nextPoolIndexRef = useRef(0)
 
   useStreamBridge(
     disposeBag => {
@@ -124,6 +125,16 @@ export function useEngineBridge(
           )
         })
         .bindAction(vm.removeTrigger$, () => {
+          const poolIndex = nextPoolIndexRef.current % EXPLOSION_POOL_SIZE
+          nextPoolIndexRef.current += 1
+          const poolSlot = shared.explosionPool[poolIndex]
+          poolSlot.centerX.value = slot.translateX.value + slot.width.value / 2
+          poolSlot.centerY.value = slot.translateY.value + CELL_SIZE / 2
+          poolSlot.color.value = slot.color.value
+          poolSlot.progress.value = 0
+          poolSlot.progress.value = withTiming(1, {
+            duration: ANIM.REMOVE_FADE
+          })
           slot.opacity.value = withTiming(0, { duration: ANIM.REMOVE_FADE }, finished => {
             if (finished) scheduleOnRN(removeItem)
           })

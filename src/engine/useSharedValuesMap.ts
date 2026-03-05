@@ -1,7 +1,7 @@
 import type { SharedValue } from 'react-native-reanimated'
 import { useSharedValue } from 'react-native-reanimated'
 
-import { CELL_SIZE, KEYS, ROWS_COUNT } from '../model/consts'
+import { CELL_SIZE, EXPLOSION_POOL_SIZE, KEYS, ROWS_COUNT } from '../model/consts'
 
 export type ItemSlotSharedValues = {
   translateX: SharedValue<number>
@@ -11,6 +11,13 @@ export type ItemSlotSharedValues = {
   color: SharedValue<string>
   isActive: SharedValue<boolean>
   initialLeft: SharedValue<number>
+}
+
+export type ExplosionPoolSlotSharedValues = {
+  progress: SharedValue<number>
+  centerX: SharedValue<number>
+  centerY: SharedValue<number>
+  color: SharedValue<string>
 }
 
 export type SharedValuesMap = {
@@ -34,6 +41,7 @@ export type SharedValuesMap = {
     gameOverScore: SharedValue<number>
   }
   items: Record<string, ItemSlotSharedValues>
+  explosionPool: ExplosionPoolSlotSharedValues[]
 }
 
 export function useSharedValuesMap(): SharedValuesMap {
@@ -76,6 +84,45 @@ export function useSharedValuesMap(): SharedValuesMap {
     {} as Record<string, ItemSlotSharedValues>
   )
 
+  const explosionPool: ExplosionPoolSlotSharedValues[] = [
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    },
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    },
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    },
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    },
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    },
+    {
+      progress: useSharedValue(0),
+      centerX: useSharedValue(-1000),
+      centerY: useSharedValue(-1000),
+      color: useSharedValue('#fff')
+    }
+  ]
+
   return {
     score,
     multiplier,
@@ -83,6 +130,7 @@ export function useSharedValuesMap(): SharedValuesMap {
     indicator,
     ghost,
     overlay,
-    items
+    items,
+    explosionPool
   }
 }

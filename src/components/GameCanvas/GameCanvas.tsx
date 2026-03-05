@@ -16,12 +16,14 @@ import { useDerivedValue } from 'react-native-reanimated'
 import {
   CELL_SIZE,
   COLUMNS_COUNT,
+  EXPLOSION_POOL_SIZE,
   KEYS,
   ROWS_COUNT
 } from '../../model/consts'
 import { SCORE_BAR, TOP_RESTART } from '../../model/layoutConsts'
 import { fonts } from '../../utils/fonts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
+import { GameCanvasExplosion } from './GameCanvasExplosion'
 import { GameCanvasGhost } from './GameCanvasGhost'
 import { GameCanvasIndicator } from './GameCanvasIndicator'
 import { GameCanvasItem } from './GameCanvasItem'
@@ -214,6 +216,9 @@ export const GameCanvas = memo(function GameCanvas({
             translateX={shared.translateX}
             block={block}
           />
+        ))}
+        {shared.explosionPool.map((slot, i) => (
+          <GameCanvasExplosion key={i} slot={slot} />
         ))}
         {/* Game Over Overlay */}
         <GameOverOverlay
