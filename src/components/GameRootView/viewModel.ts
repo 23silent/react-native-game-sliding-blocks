@@ -43,6 +43,13 @@ export class RootViewModel {
   public multiplier$: Observable<number>
   private comboStreak = 0
 
+  private readonly gameOverSubject$ = new BehaviorSubject<{ score: number } | null>(
+    null
+  )
+  public gameOver$: Observable<{ score: number } | null>
+  getGameOver = (): { score: number } | null =>
+    this.gameOverSubject$.getValue()
+
   private processData: ProcessData
 
   constructor() {
@@ -55,6 +62,7 @@ export class RootViewModel {
     this.translateX$ = this.translateXSubject$.asObservable()
     this.score$ = this.scoreSubject$.asObservable()
     this.multiplier$ = this.multiplierSubject$.asObservable()
+    this.gameOver$ = this.gameOverSubject$.asObservable()
 
     this.onChangeItems$ = this.items$.asObservable()
 
@@ -127,7 +135,9 @@ export class RootViewModel {
     }
 
     if (this.rows.filter(row => row.length).length === ROWS_COUNT) {
-      this.restart()
+      this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
+      this.setBusy(false)
+      return
     }
 
     if (this.applyVersion !== versionAtStart) return
@@ -189,6 +199,7 @@ export class RootViewModel {
   }
 
   restart = () => {
+    this.gameOverSubject$.next(null)
     this.applyVersion++
     this.taskQueue = []
     this.tempRemoveQueue.clear()

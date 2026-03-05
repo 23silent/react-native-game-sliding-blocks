@@ -12,6 +12,7 @@ import { CELL_SIZE } from '../../consts'
 import { PathSegment } from '../../types'
 import { nop } from '../../utils/nop'
 import { BinderHook, DisposeBag } from '../../utils/rx'
+import { GameOverOverlay, hitTestRestart } from '../GameOverOverlay'
 import { RootViewModel } from '../GameRootView/viewModel'
 import { ViewModel } from './viewModel'
 import { scheduleOnRN } from 'react-native-worklets'
@@ -40,6 +41,15 @@ export const GameGestureView = ({
     if (updated) rootViewModel.onCompleteGesture(updated)
   }
 
+  const handleTapOrRestart = (x: number, y: number) => {
+    const gameOver = rootViewModel.getGameOver()
+    if (gameOver && hitTestRestart(x, y)) {
+      rootViewModel.restart()
+      return
+    }
+    onEnd()
+  }
+
   useEffect(() => {
     const disposeBag = new DisposeBag()
     BinderHook()
@@ -59,7 +69,9 @@ export const GameGestureView = ({
     return () => disposeBag.dispose()
   }, [])
 
-  const tap = Gesture.Tap().onTouchesUp(() => scheduleOnRN(onEnd))
+  const tap = Gesture.Tap().onEnd(e =>
+    scheduleOnRN(handleTapOrRestart, e.x, e.y)
+  )
   const pan = Gesture.Pan()
     .onBegin(e => scheduleOnRN(onBegin, e))
     .onChange(e => scheduleOnRN(onChange, e))
@@ -75,7 +87,10 @@ export const GameGestureView = ({
   return (
     <GestureDetector gesture={gesture}>
       <View onLayout={onLayout} style={style}>
-        <Canvas style={{ flex: 1 }}>{children}</Canvas>
+        <Canvas style={{ flex: 1 }}>
+          {children}
+          <GameOverOverlay rootViewModel={rootViewModel} />
+        </Canvas>
       </View>
     </GestureDetector>
   )
