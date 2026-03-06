@@ -20,8 +20,8 @@ export const BLOCK = {
 export const EXPLOSION = {
   RADIUS: 120,
   BASE_PARTICLE_SIZE: 18,
-  RISE_HEIGHT: 55,
-  FALL_DISTANCE: 200,
+  RISE_HEIGHT: 100,
+  FALL_DISTANCE: 400,
   PICTURE_SIZE: 450
 } as const
 
@@ -34,7 +34,7 @@ export const CHECKERBOARD = {
 
 /** Explosion preset counts (used in explosionPresets) */
 export const EXPLOSION_PRESETS = {
-  PARTICLE_COUNT: 18,
+  PARTICLE_COUNT: 8,
   TRAJECTORY_PRESET_COUNT: 8,
   SHAPE_PRESET_COUNT: 8
 } as const
