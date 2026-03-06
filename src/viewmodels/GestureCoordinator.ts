@@ -1,8 +1,7 @@
 import { filter, map, Observable, share, Subject, tap } from 'rxjs'
 
-import { CELL_SIZE, COLUMNS_COUNT } from '../model/consts'
-import type { PathSegment } from '../model/types'
 import { mapToVoid } from '../core/binding'
+import type { PathSegment } from '../model/types'
 
 export interface IRootForGesture {
   getRows(): PathSegment[][]
@@ -19,6 +18,11 @@ export type GestureBounds = { minPx: number; maxPx: number }
 type Layout = { x: number; y: number }
 type BeginGesture = { absoluteX: number; absoluteY: number }
 type MinMax = { min: number; max: number }
+
+export type GestureCoordinatorConfig = {
+  cellSize: number
+  columnsCount: number
+}
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max)
@@ -49,7 +53,12 @@ export class GestureCoordinator {
   private readonly translateX$ = new Subject<number>()
   private readonly gestureBoundsSubject$ = new Subject<GestureBounds | null>()
 
-  constructor(private readonly root: IRootForGesture) {
+  constructor(
+    private readonly root: IRootForGesture,
+    private readonly config: GestureCoordinatorConfig
+  ) {
+    const { cellSize, columnsCount } = config
+
     this.onChangeTranslateX$ = this.translateX$.asObservable()
     this.gestureBounds$ = this.gestureBoundsSubject$.asObservable()
 
@@ -65,7 +74,7 @@ export class GestureCoordinator {
         const mm = this.minMax!
         const coords = this.activeItemCoords!
         const to = clamp(
-          Math.round(currentTranslateX / CELL_SIZE),
+          Math.round(currentTranslateX / cellSize),
           mm.min,
           mm.max
         )
@@ -115,11 +124,12 @@ export class GestureCoordinator {
     const layout = this.containerLayout
     if (!layout) return
 
+    const { cellSize, columnsCount } = this.config
     const yOffset = gesture.absoluteY - layout.y
     const xOffset = gesture.absoluteX - layout.x
 
-    const rowIndex = Math.floor(yOffset / CELL_SIZE)
-    const colIndex = Math.floor(xOffset / CELL_SIZE)
+    const rowIndex = Math.floor(yOffset / cellSize)
+    const colIndex = Math.floor(xOffset / cellSize)
 
     const row = this.root.getRows()[rowIndex]
     const itemIndex = row?.findIndex(
@@ -128,12 +138,12 @@ export class GestureCoordinator {
     const item = row?.[itemIndex]
     if (!item) return
 
-    const width = (item.end - item.start) * CELL_SIZE
+    const width = (item.end - item.start) * cellSize
     const min =
       itemIndex === 0 ? 0 - item.start : row[itemIndex - 1].end - item.start
     const max =
       itemIndex === row.length - 1
-        ? COLUMNS_COUNT - item.end
+        ? columnsCount - item.end
         : row[itemIndex + 1].start - item.end
 
     this.minMax = { min, max }
@@ -142,15 +152,15 @@ export class GestureCoordinator {
     this.root.setActiveItem({
       id: item.id,
       width,
-      left: item.start * CELL_SIZE,
-      top: rowIndex * CELL_SIZE,
+      left: item.start * cellSize,
+      top: rowIndex * cellSize,
       color: item.color
     })
 
     this.translateX$.next(0)
     this.gestureBoundsSubject$.next({
-      minPx: min * CELL_SIZE,
-      maxPx: max * CELL_SIZE
+      minPx: min * cellSize,
+      maxPx: max * cellSize
     })
   }
 

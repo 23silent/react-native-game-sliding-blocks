@@ -1,9 +1,11 @@
-import { COLUMNS_COUNT } from './consts'
 import type { PathSegment } from './types'
 
 type Gap = { start: number; end: number }
 
-const calculateGaps = (items: PathSegment[]): Gap[] => {
+const calculateGaps = (
+  items: PathSegment[],
+  columnsCount: number
+): Gap[] => {
   const gaps: Gap[] = []
   let lastEnd = 0
 
@@ -16,8 +18,8 @@ const calculateGaps = (items: PathSegment[]): Gap[] => {
     lastEnd = Math.max(lastEnd, item.end)
   }
 
-  if (lastEnd < COLUMNS_COUNT) {
-    gaps.push({ start: lastEnd, end: COLUMNS_COUNT })
+  if (lastEnd < columnsCount) {
+    gaps.push({ start: lastEnd, end: columnsCount })
   }
 
   return gaps
@@ -44,7 +46,8 @@ const findContainingGap = (gaps: Gap[], item: PathSegment): number => {
 }
 
 export const fit = (
-  data: PathSegment[][]
+  data: PathSegment[][],
+  columnsCount: number
 ): { data: PathSegment[][]; hasChanges: boolean } => {
   let hasChanges = false
   const workingData = data.map(row => [...row])
@@ -55,7 +58,7 @@ export const fit = (
     for (let rowIndex = 0; rowIndex < workingData.length - 1; rowIndex++) {
       const currentRow = workingData[rowIndex]
       const nextRow = workingData[rowIndex + 1]
-      const nextRowGaps = calculateGaps(nextRow)
+      const nextRowGaps = calculateGaps(nextRow, columnsCount)
 
       const sortedCurrentRow = [...currentRow].sort((a, b) => a.start - b.start)
       const movedItems: PathSegment[] = []

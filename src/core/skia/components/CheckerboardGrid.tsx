@@ -2,7 +2,7 @@ import { Group, Picture, Skia } from '@shopify/react-native-skia'
 import React, { memo, useMemo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import { CHECKERBOARD } from '../../../model/visualConsts'
+import { useSettings } from '../../../hooks/useSettings'
 
 type Props = {
   rows: number
@@ -23,10 +23,14 @@ export const CheckerboardGrid = memo(function CheckerboardGrid({
   rows,
   cols,
   cellSize,
-  baseColor = CHECKERBOARD.DEFAULT_BASE_COLOR,
-  darkOpacity = CHECKERBOARD.DEFAULT_DARK_OPACITY,
-  lightOpacity = CHECKERBOARD.DEFAULT_LIGHT_OPACITY
+  baseColor: baseColorProp,
+  darkOpacity: darkOpacityProp,
+  lightOpacity: lightOpacityProp
 }: Props): React.JSX.Element {
+  const { checkerboard } = useSettings()
+  const baseColor = baseColorProp ?? checkerboard.defaultBaseColor
+  const darkOpacity = darkOpacityProp ?? checkerboard.defaultDarkOpacity
+  const lightOpacity = lightOpacityProp ?? checkerboard.defaultLightOpacity
   const paint = useMemo(() => Skia.Paint(), [])
   const recorder = useMemo(() => Skia.PictureRecorder(), [])
 

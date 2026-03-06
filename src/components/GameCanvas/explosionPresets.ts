@@ -3,10 +3,7 @@
  * All values are plain data for worklet compatibility.
  */
 
-import { EXPLOSION_PRESETS } from '../../model/visualConsts'
-
-const { PARTICLE_COUNT, TRAJECTORY_PRESET_COUNT, SHAPE_PRESET_COUNT } =
-  EXPLOSION_PRESETS
+import type { ExplosionPresetsSettings } from '../../settings/types'
 
 /** Seeded pseudo-random for deterministic presets */
 function seeded(seed: number): () => number {
@@ -30,10 +27,13 @@ export type ShapeParticle = {
   rotation: number
 }
 
-function buildTrajectoryPreset(seedBase: number): TrajectoryParticle[] {
+function buildTrajectoryPreset(
+  seedBase: number,
+  particleCount: number
+): TrajectoryParticle[] {
   const r = seeded(seedBase)
   const particles: TrajectoryParticle[] = []
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
+  for (let i = 0; i < particleCount; i++) {
     const angle = r() * Math.PI * 2
     const distMult = 0.6 + r() * 0.8
     const speedCurve = 0.7 + r() * 0.6
@@ -43,10 +43,13 @@ function buildTrajectoryPreset(seedBase: number): TrajectoryParticle[] {
   return particles
 }
 
-function buildShapePreset(seedBase: number): ShapeParticle[] {
+function buildShapePreset(
+  seedBase: number,
+  particleCount: number
+): ShapeParticle[] {
   const r = seeded(seedBase)
   const particles: ShapeParticle[] = []
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
+  for (let i = 0; i < particleCount; i++) {
     const shape = Math.floor(r() * 4) as 0 | 1 | 2 | 3
     const sizeMult = 0.5 + r() * 1.2
     const rotation = r() * Math.PI * 2
@@ -55,19 +58,29 @@ function buildShapePreset(seedBase: number): ShapeParticle[] {
   return particles
 }
 
-export const TRAJECTORY_PRESETS: TrajectoryParticle[][] = Array.from(
-  { length: TRAJECTORY_PRESET_COUNT },
-  (_, i) => buildTrajectoryPreset(1000 + i * 7919)
-)
+export type ExplosionPresets = {
+  trajectoryPresets: TrajectoryParticle[][]
+  shapePresets: ShapeParticle[][]
+  particleCount: number
+  presetCount: number
+}
 
-export const SHAPE_PRESETS: ShapeParticle[][] = Array.from(
-  { length: SHAPE_PRESET_COUNT },
-  (_, i) => buildShapePreset(2000 + i * 7919)
-)
-
-export const EXPLOSION_PRESET_COUNT = Math.max(
-  TRAJECTORY_PRESET_COUNT,
-  SHAPE_PRESET_COUNT
-)
-
-export { PARTICLE_COUNT }
+export function buildExplosionPresets(
+  config: ExplosionPresetsSettings
+): ExplosionPresets {
+  const { particleCount, trajectoryPresetCount, shapePresetCount } = config
+  const trajectoryPresets = Array.from(
+    { length: trajectoryPresetCount },
+    (_, i) => buildTrajectoryPreset(1000 + i * 7919, particleCount)
+  )
+  const shapePresets = Array.from(
+    { length: shapePresetCount },
+    (_, i) => buildShapePreset(2000 + i * 7919, particleCount)
+  )
+  return {
+    trajectoryPresets,
+    shapePresets,
+    particleCount,
+    presetCount: Math.max(trajectoryPresetCount, shapePresetCount)
+  }
+}

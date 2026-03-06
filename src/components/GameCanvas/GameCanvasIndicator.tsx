@@ -2,17 +2,20 @@ import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
 import { PositionedRect } from '../../core/skia'
-import { CELL_SIZE, ROWS_COUNT } from '../../model/consts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 
 type Props = {
   indicator: SharedValuesMap['indicator']
   translateX: SharedValuesMap['translateX']
+  cellSize: number
+  rowsCount: number
 }
 
 export function GameCanvasIndicator({
   indicator,
-  translateX
+  translateX,
+  cellSize,
+  rowsCount
 }: Props): React.JSX.Element {
   const x = useDerivedValue(
     () => indicator.left.value + translateX.value
@@ -23,7 +26,7 @@ export function GameCanvasIndicator({
       x={x}
       y={0}
       width={indicator.width}
-      height={CELL_SIZE * ROWS_COUNT}
+      height={cellSize * rowsCount}
       color="blue"
       opacity={indicator.opacity}
     />

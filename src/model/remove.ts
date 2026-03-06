@@ -1,8 +1,8 @@
-import { COLUMNS_COUNT } from './consts'
 import type { PathSegment } from './types'
 
 export const remove = (
-  input: PathSegment[][]
+  input: PathSegment[][],
+  columnsCount: number
 ): {
   data: PathSegment[][]
   toRemove: PathSegment[][]
@@ -10,7 +10,7 @@ export const remove = (
 } => {
   const fulfilledRows = input.map(row => {
     const sum = row.reduce((acc, item) => acc + (item.end - item.start), 0)
-    return sum === COLUMNS_COUNT
+    return sum === columnsCount
   })
 
   if (!fulfilledRows.some(Boolean)) {

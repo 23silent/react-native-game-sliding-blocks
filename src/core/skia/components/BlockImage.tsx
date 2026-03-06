@@ -9,9 +9,8 @@ import React, { useMemo } from 'react'
 import type { SharedValue } from 'react-native-reanimated'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import { CELL_SIZE } from '../../../model/consts'
+import { useSettings } from '../../../hooks/useSettings'
 import type { BlockMap } from '../../../model/types'
-import { BLOCK } from '../../../model/visualConsts'
 
 export type BlockImageSlot = {
   translateX: SharedValue<number>
@@ -24,7 +23,7 @@ export type BlockImageSlot = {
 type Props = {
   slot: BlockImageSlot
   block: BlockMap
-  height?: number
+  cellSize: number
   /** When true, draw blocks with Skia primitives instead of PNG assets. */
   useSkiaDrawing?: boolean
 }
@@ -38,17 +37,20 @@ type Props = {
 export function BlockImage({
   slot,
   block,
-  height = CELL_SIZE,
+  cellSize,
   useSkiaDrawing = false
 }: Props): React.JSX.Element {
+  const { block: blockSettings } = useSettings()
+  const height = cellSize
+
   const image = useDerivedValue<SkImage | null>(
     () => {
       if (useSkiaDrawing) return null
       const color = slot.color.value
-      const size = Math.round(slot.width.value / CELL_SIZE)
+      const size = Math.round(slot.width.value / cellSize)
       return (block?.[color]?.[size - 1] ?? null) as SkImage | null
     },
-    [block, useSkiaDrawing]
+    [block, useSkiaDrawing, cellSize]
   )
 
   const fillPaint = useMemo(() => Skia.Paint(), [])
@@ -63,20 +65,22 @@ export function BlockImage({
     const color = slot.color.value
     const isSuper = color === '#000' || color === '#000000'
     const rect = Skia.XYWHRect(0, 0, w, height)
-    const rrect = Skia.RRectXY(rect, BLOCK.RADIUS, BLOCK.RADIUS)
+    const rrect = Skia.RRectXY(
+      rect,
+      blockSettings.radius,
+      blockSettings.radius
+    )
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, w, height))
 
     if (isSuper) {
-      // Super block: gradient fill (purple → gold) with rounded corners
-      // Draw gradient by filling rrect directly - use base color + draw gradient strips clipped
       const path = Skia.Path.Make()
       path.addRRect(rrect)
       canvas.save()
-      canvas.clipPath(path, 1, true) // 1 = kIntersect (keep inside path), 0 = kDifference
-      const [c1, c2] = BLOCK.SUPER_GRADIENT_COLORS
-      const stepH = height / BLOCK.SUPER_GRADIENT_STEPS
-      for (let i = 0; i < BLOCK.SUPER_GRADIENT_STEPS; i++) {
-        const t = i / (BLOCK.SUPER_GRADIENT_STEPS - 1)
+      canvas.clipPath(path, 1, true)
+      const [c1, c2] = blockSettings.superGradientColors
+      const stepH = height / blockSettings.superGradientSteps
+      for (let i = 0; i < blockSettings.superGradientSteps; i++) {
+        const t = i / (blockSettings.superGradientSteps - 1)
         const r = Math.round(c1[0] + (c2[0] - c1[0]) * t)
         const g = Math.round(c1[1] + (c2[1] - c1[1]) * t)
         const b = Math.round(c1[2] + (c2[2] - c1[2]) * t)
@@ -86,21 +90,27 @@ export function BlockImage({
       }
       canvas.restore()
     } else {
-      // Regular block: solid fill
       fillPaint.setColor(Skia.Color(color))
       fillPaint.setAlphaf(opacity)
       canvas.drawRRect(rrect, fillPaint)
     }
 
-    // Border
-    strokePaint.setColor(Skia.Color(BLOCK.BORDER_COLOR))
+    strokePaint.setColor(Skia.Color(blockSettings.borderColor))
     strokePaint.setAlphaf(opacity)
-    strokePaint.setStrokeWidth(BLOCK.BORDER_WIDTH)
-    strokePaint.setStyle(1) // 1 = Stroke in Skia
+    strokePaint.setStrokeWidth(blockSettings.borderWidth)
+    strokePaint.setStyle(1)
     canvas.drawRRect(rrect, strokePaint)
 
     return recorder.finishRecordingAsPicture()
-  }, [slot, height, recorder, fillPaint, frostPaint, strokePaint])
+  }, [
+    slot,
+    height,
+    recorder,
+    fillPaint,
+    frostPaint,
+    strokePaint,
+    blockSettings
+  ])
 
   const skiaTransform = useDerivedValue(
     () => [

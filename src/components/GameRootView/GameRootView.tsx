@@ -3,11 +3,6 @@ import { useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { withTiming } from 'react-native-reanimated'
 
-import {
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  PADDING
-} from '../../model/consts'
 import { GAME_ROOT, TOP_PAUSE } from '../../model/layoutConsts'
 import type { PathSegment } from '../../model/types'
 import {
@@ -17,6 +12,7 @@ import {
   useSharedValuesMap
 } from '../../engine'
 import { useBlocks } from '../../hooks/useBlocks'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import { GameCanvas, type BlockRenderMode } from '../GameCanvas'
 import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
 import { hitTestRestart as hitTestGameOverRestart } from '../../utils/gameOverHitTest'
@@ -60,29 +56,31 @@ export const GameRootView = memo(function GameRootView({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const insets = useSafeAreaInsets()
   const isPausedRef = useRef(false)
+  const config = useGameConfig()
 
-  const [engine] = useState(() => new GameEngine())
-  const shared = useSharedValuesMap()
+  const [engine] = useState(() => new GameEngine(config))
+  const shared = useSharedValuesMap(config)
   const block = useBlocks()
   const showFinishOption = !!onMenuPress
 
   const layout = useMemo(() => {
-    const contentHeight = ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT + GAME_HEIGHT
+    const { gameHeight, gameWidth, padding } = config
+    const contentHeight = ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT + gameHeight
     const contentTop = Math.max(
       insets.top,
       (screenHeight - insets.top - insets.bottom - contentHeight) / 2 +
         insets.top
     )
     const gameAreaY = contentTop + ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT
-    const gameAreaX = (screenWidth - GAME_WIDTH) / 2
+    const gameAreaX = (screenWidth - gameWidth) / 2
     return {
       contentTop,
       gameAreaX,
       gameAreaY,
-      actionsBarLeft: PADDING,
-      actionsBarWidth: screenWidth - PADDING * 2
+      actionsBarLeft: padding,
+      actionsBarWidth: screenWidth - padding * 2
     }
-  }, [screenWidth, screenHeight, insets])
+  }, [config, screenWidth, screenHeight, insets])
 
   const onComplete = useCallback(
     (updated?: PathSegment[][]) => {
@@ -100,7 +98,7 @@ export const GameRootView = memo(function GameRootView({
     onOverlayFadeOutComplete
   })
 
-  useEngineBridge(engine, shared, { orchestrator })
+  useEngineBridge(engine, shared, { orchestrator, config })
 
   const hidePauseOverlay = useCallback(() => {
     isPausedRef.current = false
@@ -114,7 +112,9 @@ export const GameRootView = memo(function GameRootView({
         const action = hitTestPauseOverlay(
           x - layout.gameAreaX,
           y - layout.gameAreaY,
-          showFinishOption
+          showFinishOption,
+          config.gameWidth,
+          config.gameHeight
         )
         if (action === 'resume') {
           hidePauseOverlay()
@@ -143,7 +143,12 @@ export const GameRootView = memo(function GameRootView({
       const gameOver = engine.getGameOver()
       if (
         gameOver &&
-        hitTestGameOverRestart(x - layout.gameAreaX, y - layout.gameAreaY)
+        hitTestGameOverRestart(
+          x - layout.gameAreaX,
+          y - layout.gameAreaY,
+          config.gameWidth,
+          config.gameHeight
+        )
       ) {
         engine.restart()
         return true
@@ -170,6 +175,7 @@ export const GameRootView = memo(function GameRootView({
       <GameCanvas
         shared={shared}
         layout={layout}
+        config={config}
         block={block}
         screenWidth={screenWidth}
         screenHeight={screenHeight}

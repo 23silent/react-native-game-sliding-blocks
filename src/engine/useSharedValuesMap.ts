@@ -1,7 +1,7 @@
 import type { SharedValue } from 'react-native-reanimated'
 import { useSharedValue } from 'react-native-reanimated'
 
-import { CELL_SIZE, EXPLOSION_POOL_SIZE, KEYS, ROWS_COUNT } from '../model/consts'
+import type { GameConfig } from '../settings/gameConfig'
 
 export type ItemSlotSharedValues = {
   translateX: SharedValue<number>
@@ -52,7 +52,14 @@ export type SharedValuesMap = {
   explosionPool: ExplosionPoolSlotSharedValues[]
 }
 
-export function useSharedValuesMap(): SharedValuesMap {
+export function useSharedValuesMap(config: GameConfig): SharedValuesMap {
+  const {
+    cellSize,
+    rowsCount,
+    keys,
+    explosionPoolSize
+  } = config
+
   const score = useSharedValue(0)
   const multiplier = useSharedValue(0)
   const translateX = useSharedValue(0)
@@ -83,11 +90,11 @@ export function useSharedValuesMap(): SharedValuesMap {
     pauseOpacity: useSharedValue(0)
   }
 
-  const items = KEYS.reduce(
+  const items = keys.reduce(
     (acc, key) => {
       acc[key] = {
-        translateX: useSharedValue(-1 * CELL_SIZE),
-        translateY: useSharedValue(ROWS_COUNT * CELL_SIZE),
+        translateX: useSharedValue(-1 * cellSize),
+        translateY: useSharedValue(rowsCount * cellSize),
         opacity: useSharedValue(1),
         width: useSharedValue(0),
         color: useSharedValue('#fff'),
@@ -100,7 +107,7 @@ export function useSharedValuesMap(): SharedValuesMap {
   )
 
   const explosionPool: ExplosionPoolSlotSharedValues[] = Array.from(
-    { length: EXPLOSION_POOL_SIZE },
+    { length: explosionPoolSize },
     () => ({
       progress: useSharedValue(0),
       centerX: useSharedValue(-1000),

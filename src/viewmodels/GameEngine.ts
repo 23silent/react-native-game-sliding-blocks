@@ -2,6 +2,7 @@ import { Subject } from 'rxjs'
 import type { Observable } from 'rxjs'
 
 import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
+import type { GameConfig } from '../settings/gameConfig'
 import { GameViewModel } from './GameViewModel'
 import { GestureCoordinator } from './GestureCoordinator'
 import type {
@@ -61,13 +62,17 @@ export class GameEngine implements IGameEngine {
   readonly gesturePipeline$: Observable<void>
   readonly stepComplete$: Observable<void>
 
-  constructor() {
+  constructor(config: GameConfig) {
     this.stepComplete$ = this.stepCompleteSubject$.asObservable()
     this.game = new GameViewModel(
+      config,
       this.stepComplete$,
       this.overlayFadeOutCompleteSubject$.asObservable()
     )
-    this.gesture = new GestureCoordinator(this.game)
+    this.gesture = new GestureCoordinator(this.game, {
+      cellSize: config.cellSize,
+      columnsCount: config.columnsCount
+    })
 
     this.items$ = this.game.onChangeItems$
     this.activeItem$ = this.game.activeItem$

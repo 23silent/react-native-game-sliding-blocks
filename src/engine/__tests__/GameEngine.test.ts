@@ -6,6 +6,8 @@
  */
 import { firstValueFrom } from 'rxjs'
 
+import { computeGameConfig } from '../../settings/gameConfig'
+import { DEFAULT_SETTINGS } from '../../settings/defaults'
 import { GameEngine } from '../../viewmodels/GameEngine'
 
 jest.mock('react-native-sound-player', () => ({
@@ -13,11 +15,13 @@ jest.mock('react-native-sound-player', () => ({
   playSoundFile: jest.fn()
 }))
 
+const testConfig = computeGameConfig(DEFAULT_SETTINGS.gameLayout, 400)
+
 describe('GameEngine', () => {
   let engine: GameEngine
 
   beforeEach(() => {
-    engine = new GameEngine()
+    engine = new GameEngine(testConfig)
   })
 
   it('exposes observable streams', () => {

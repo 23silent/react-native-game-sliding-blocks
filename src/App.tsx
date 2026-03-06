@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { CanvasErrorBoundary } from './components/CanvasErrorBoundary'
 import type { Route } from './navigation/types'
+import { settingsViewModel } from './settings'
 import { SPLASH_DURATION_MS } from './model/animConsts'
 import { GameScreen } from './screens/GameScreen'
 import { HomeScreen } from './screens/HomeScreen'
@@ -16,6 +17,10 @@ function App(): React.JSX.Element {
   const [route, setRoute] = useState<Route>('splash')
 
   const goHome = useCallback(() => setRoute('home'), [])
+
+  useEffect(() => {
+    settingsViewModel.init()
+  }, [])
 
   useEffect(() => {
     if (route !== 'splash') return

@@ -1,4 +1,3 @@
-import { ROWS_COUNT } from './consts'
 import type {
   PathSegment,
   ProcessJobResult,
@@ -9,6 +8,11 @@ import { fit } from './fit'
 import { generateSegmentsWithGaps } from './generate'
 import { remove } from './remove'
 
+export type ProcessDataConfig = {
+  rowsCount: number
+  columnsCount: number
+}
+
 export class ProcessData {
   private state: ProcessorState = {
     step: 'idle',
@@ -17,6 +21,8 @@ export class ProcessData {
     shouldAdd: false
   }
 
+  constructor(private readonly config: ProcessDataConfig) {}
+
   private updateState = (partial: Partial<ProcessorState>) => {
     const current = this.state
     this.state = { ...current, ...partial }
@@ -24,6 +30,7 @@ export class ProcessData {
 
   public processJob = (): ProcessJobResult => {
     const state = this.state
+    const { columnsCount, rowsCount } = this.config
 
     switch (state.step) {
       case 'gesture': {
@@ -35,7 +42,7 @@ export class ProcessData {
         }
       }
       case 'fit': {
-        const fitResult = fit(state.data)
+        const fitResult = fit(state.data, columnsCount)
         this.updateState({
           data: fitResult.data,
           step: 'remove',
@@ -48,7 +55,7 @@ export class ProcessData {
         }
       }
       case 'remove': {
-        const removeResult = remove(state.data)
+        const removeResult = remove(state.data, columnsCount)
         this.updateState({
           data: removeResult.data,
           hasChanges: removeResult.hasChanges
@@ -74,7 +81,10 @@ export class ProcessData {
         }
       }
       case 'add': {
-        const newData = [...state.data.slice(1), generateSegmentsWithGaps()]
+        const newData = [
+          ...state.data.slice(1),
+          generateSegmentsWithGaps(columnsCount)
+        ]
         this.updateState({
           data: newData,
           hasChanges: true,
@@ -102,8 +112,9 @@ export class ProcessData {
   }
 
   public initializeWithGenerated = () => {
-    const initialData = Array.from({ length: ROWS_COUNT }, (_, i) =>
-      i < ROWS_COUNT - 2 ? [] : generateSegmentsWithGaps()
+    const { rowsCount, columnsCount } = this.config
+    const initialData = Array.from({ length: rowsCount }, (_, i) =>
+      i < rowsCount - 2 ? [] : generateSegmentsWithGaps(columnsCount)
     )
     this.setSegments(initialData)
   }

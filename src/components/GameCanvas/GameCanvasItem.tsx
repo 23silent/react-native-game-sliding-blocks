@@ -9,6 +9,7 @@ type Props = {
   slot: ItemSlotSharedValues
   translateX: SharedValue<number>
   block: BlockMap
+  cellSize: number
   useSkiaDrawing?: boolean
 }
 
@@ -16,11 +17,17 @@ export function GameCanvasItem({
   slot,
   translateX,
   block,
+  cellSize,
   useSkiaDrawing = false
 }: Props): React.JSX.Element {
   useReactionRule(activeGestureSync(slot, translateX))
 
   return (
-    <BlockImage slot={slot} block={block} useSkiaDrawing={useSkiaDrawing} />
+    <BlockImage
+      slot={slot}
+      block={block}
+      cellSize={cellSize}
+      useSkiaDrawing={useSkiaDrawing}
+    />
   )
 }

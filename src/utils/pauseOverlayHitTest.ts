@@ -1,24 +1,26 @@
-import { GAME_HEIGHT, GAME_WIDTH } from '../model/consts'
 import { PAUSE_OVERLAY } from '../model/layoutConsts'
 
 const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_GAP, FIRST_BUTTON_TOP } =
   PAUSE_OVERLAY
-const BOX_LEFT = (GAME_WIDTH - PAUSE_OVERLAY.BOX_WIDTH) / 2
-const BOX_TOP = (GAME_HEIGHT - PAUSE_OVERLAY.BOX_HEIGHT) / 2
-const BUTTON_LEFT = (GAME_WIDTH - BUTTON_WIDTH) / 2
-
-const resumeTop = BOX_TOP + FIRST_BUTTON_TOP
-const restartTop = resumeTop + BUTTON_HEIGHT + BUTTON_GAP
-const finishTop = restartTop + BUTTON_HEIGHT + BUTTON_GAP
 
 export type PauseOverlayAction = 'resume' | 'restart' | 'finish'
 
 export function hitTestPauseOverlay(
   x: number,
   y: number,
-  showFinishOption: boolean
+  showFinishOption: boolean,
+  gameWidth: number,
+  gameHeight: number
 ): PauseOverlayAction | null {
-  if (x < BUTTON_LEFT || x > BUTTON_LEFT + BUTTON_WIDTH) return null
+  const boxLeft = (gameWidth - PAUSE_OVERLAY.BOX_WIDTH) / 2
+  const boxTop = (gameHeight - PAUSE_OVERLAY.BOX_HEIGHT) / 2
+  const buttonLeft = (gameWidth - BUTTON_WIDTH) / 2
+
+  const resumeTop = boxTop + FIRST_BUTTON_TOP
+  const restartTop = resumeTop + BUTTON_HEIGHT + BUTTON_GAP
+  const finishTop = restartTop + BUTTON_HEIGHT + BUTTON_GAP
+
+  if (x < buttonLeft || x > buttonLeft + BUTTON_WIDTH) return null
   if (y >= resumeTop && y <= resumeTop + BUTTON_HEIGHT) return 'resume'
   if (y >= restartTop && y <= restartTop + BUTTON_HEIGHT) return 'restart'
   if (

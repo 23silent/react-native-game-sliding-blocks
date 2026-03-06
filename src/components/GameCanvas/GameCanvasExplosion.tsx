@@ -3,17 +3,8 @@ import React, { memo, useMemo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
 import type { ExplosionPoolSlotSharedValues } from '../../engine/useSharedValuesMap'
-
-import { EXPLOSION } from '../../model/visualConsts'
-import {
-  PARTICLE_COUNT,
-  SHAPE_PRESETS,
-  TRAJECTORY_PRESETS
-} from './explosionPresets'
-
-const { RADIUS, BASE_PARTICLE_SIZE, RISE_HEIGHT, FALL_DISTANCE, PICTURE_SIZE } =
-  EXPLOSION
-const CENTER = PICTURE_SIZE / 2
+import { useSettings } from '../../hooks/useSettings'
+import { buildExplosionPresets } from './explosionPresets'
 
 type Props = {
   slot: ExplosionPoolSlotSharedValues
@@ -29,6 +20,26 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
   slot,
   slotIndex
 }: Props): React.JSX.Element {
+  const { explosion: explosionSettings, explosionPresets: presetsConfig } =
+    useSettings()
+  const presets = useMemo(
+    () => buildExplosionPresets(presetsConfig),
+    [
+      presetsConfig.particleCount,
+      presetsConfig.trajectoryPresetCount,
+      presetsConfig.shapePresetCount
+    ]
+  )
+
+  const {
+    radius,
+    baseParticleSize,
+    riseHeight,
+    fallDistance,
+    pictureSize
+  } = explosionSettings
+  const center = pictureSize / 2
+
   const paint = useMemo(() => Skia.Paint(), [])
   const recorder = useMemo(() => Skia.PictureRecorder(), [])
 
@@ -36,30 +47,31 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
     'worklet'
     const progress = slot.progress.value
     const canvas = recorder.beginRecording(
-      Skia.XYWHRect(0, 0, PICTURE_SIZE, PICTURE_SIZE)
+      Skia.XYWHRect(0, 0, pictureSize, pictureSize)
     )
 
     if (progress > 0) {
       const trajPreset =
-        TRAJECTORY_PRESETS[slotIndex % TRAJECTORY_PRESETS.length]
-      const shapePreset = SHAPE_PRESETS[slotIndex % SHAPE_PRESETS.length]
+        presets.trajectoryPresets[slotIndex % presets.trajectoryPresets.length]
+      const shapePreset =
+        presets.shapePresets[slotIndex % presets.shapePresets.length]
       const color = slot.color.value
 
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
+      for (let i = 0; i < presets.particleCount; i++) {
         const traj = trajPreset[i] ?? trajPreset[0]
         const shape = shapePreset[i] ?? shapePreset[0]
 
         const easedProgress = 1 - Math.pow(1 - progress, traj.speedCurve)
-        const distance = easedProgress * RADIUS * traj.distMult
-        const cx = CENTER + Math.cos(traj.angle) * distance
-        const baseCy = CENTER + Math.sin(traj.angle) * distance
-        const rise = -Math.sin(progress * Math.PI) * RISE_HEIGHT * traj.arcMult
-        const fall = progress * progress * FALL_DISTANCE * traj.arcMult
+        const distance = easedProgress * radius * traj.distMult
+        const cx = center + Math.cos(traj.angle) * distance
+        const baseCy = center + Math.sin(traj.angle) * distance
+        const rise = -Math.sin(progress * Math.PI) * riseHeight * traj.arcMult
+        const fall = progress * progress * fallDistance * traj.arcMult
         const cy = baseCy + rise + fall
 
         const alpha = (1 - progress) * 0.92
         const sizeScale = Math.pow(progress, 0.6) * (1 - progress * 0.4)
-        const size = BASE_PARTICLE_SIZE * shape.sizeMult * sizeScale
+        const size = baseParticleSize * shape.sizeMult * sizeScale
 
         paint.setColor(Skia.Color(color))
         paint.setAlphaf(alpha)
@@ -91,14 +103,26 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
     }
 
     return recorder.finishRecordingAsPicture()
-  }, [slot, slotIndex, recorder, paint])
+  }, [
+    slot,
+    slotIndex,
+    recorder,
+    paint,
+    presets,
+    radius,
+    baseParticleSize,
+    riseHeight,
+    fallDistance,
+    pictureSize,
+    center
+  ])
 
   const transform = useDerivedValue(
     () => [
-      { translateX: slot.centerX.value - CENTER },
-      { translateY: slot.centerY.value - CENTER }
+      { translateX: slot.centerX.value - center },
+      { translateY: slot.centerY.value - center }
     ],
-    [slot]
+    [slot, center]
   )
 
   const opacity = useDerivedValue(

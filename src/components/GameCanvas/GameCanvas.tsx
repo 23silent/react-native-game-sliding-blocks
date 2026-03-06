@@ -15,17 +15,8 @@ import { CheckerboardGrid, Panel, SkiaButton, SkiaLabel } from '../../core/skia'
 import React, { memo, useEffect, useMemo, useRef } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import {
-  CELL_SIZE,
-  COLUMNS_COUNT,
-  EXPLOSION_POOL_SIZE,
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  KEYS,
-  ROWS_COUNT,
-  TOTAL_ASSETS_IMAGE,
-  TOTAL_ASSETS_SKIA
-} from '../../model/consts'
+import { TOTAL_ASSETS_IMAGE, TOTAL_ASSETS_SKIA } from '../../model/consts'
+import type { GameConfig } from '../../settings/gameConfig'
 import {
   LOADING_OVERLAY,
   SCORE_BAR,
@@ -68,6 +59,7 @@ export type BlockRenderMode = 'image' | 'skia'
 type GameCanvasProps = {
   shared: SharedValuesMap
   layout: GameLayout
+  config: GameConfig
   block: BlockMap
   screenWidth: number
   screenHeight: number
@@ -97,6 +89,7 @@ function countLoadedAssets(
 export const GameCanvas = memo(function GameCanvas({
   shared,
   layout,
+  config,
   block,
   screenWidth,
   screenHeight,
@@ -105,6 +98,14 @@ export const GameCanvas = memo(function GameCanvas({
   onLoadProgress,
   onLoadComplete
 }: GameCanvasProps): React.JSX.Element {
+  const {
+    cellSize,
+    gameWidth,
+    gameHeight,
+    rowsCount,
+    columnsCount,
+    keys
+  } = config
   const bgImage = useImage(require('../../assets/bg.jpg'))
   const completedRef = useRef(false)
   const useSkiaDrawing = blockRenderMode === 'skia'
@@ -273,38 +274,42 @@ export const GameCanvas = memo(function GameCanvas({
           { translateX: layout.gameAreaX },
           { translateY: layout.gameAreaY }
         ]}
-        clip={rrect(rect(0, 0, GAME_WIDTH, GAME_HEIGHT), 16, 16)}
+        clip={rrect(rect(0, 0, gameWidth, gameHeight), 16, 16)}
       >
         <Panel
           x={0}
           y={0}
-          width={GAME_WIDTH}
-          height={GAME_HEIGHT}
+          width={gameWidth}
+          height={gameHeight}
           r={16}
           color="transparent"
         />
         <CheckerboardGrid
-          rows={ROWS_COUNT}
-          cols={COLUMNS_COUNT}
-          cellSize={CELL_SIZE}
+          rows={rowsCount}
+          cols={columnsCount}
+          cellSize={cellSize}
         />
         {/* Indicator */}
         <GameCanvasIndicator
           indicator={shared.indicator}
           translateX={shared.translateX}
+          cellSize={cellSize}
+          rowsCount={rowsCount}
         />
         {/* Ghost */}
         <GameCanvasGhost
           ghost={shared.ghost}
           block={block}
+          cellSize={cellSize}
           useSkiaDrawing={useSkiaDrawing}
         />
-        {KEYS.map(key => (
+        {keys.map(key => (
           <GameCanvasItem
             key={key}
             slot={shared.items[key]}
             translateX={shared.translateX}
             block={block}
+            cellSize={cellSize}
             useSkiaDrawing={useSkiaDrawing}
           />
         ))}
@@ -314,14 +319,14 @@ export const GameCanvas = memo(function GameCanvas({
         {/* Game Over Overlay */}
         <GameOverOverlay
           overlay={shared.overlay}
-          gameWidth={GAME_WIDTH}
-          gameHeight={GAME_HEIGHT}
+          gameWidth={gameWidth}
+          gameHeight={gameHeight}
         />
         {/* Pause Overlay */}
         <PauseOverlay
           overlay={shared.overlay}
-          gameWidth={GAME_WIDTH}
-          gameHeight={GAME_HEIGHT}
+          gameWidth={gameWidth}
+          gameHeight={gameHeight}
           showFinishOption={showFinishOption}
         />
       </Group>

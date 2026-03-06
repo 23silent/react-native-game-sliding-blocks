@@ -1,4 +1,3 @@
-import { KEYS_SIZE } from './consts'
 import {
   isIdleSlot,
   PathSegment,
@@ -11,7 +10,8 @@ import { rowsToItemsMap } from './transform'
 const assignItemsToSlots = (
   itemsMap: Record<string, PathSegmentExt>,
   prevState: Record<string, PathSegmentExt | undefined>,
-  overwriteIndex: number
+  overwriteIndex: number,
+  keysSize: number
 ): { newItems: Record<string, PathSegmentExt | undefined>; nextIndex: number } => {
   const newItems = { ...prevState }
   const idToKey = new Map<string, string>()
@@ -35,7 +35,7 @@ const assignItemsToSlots = (
     let inserted = false
     let checked = 0
 
-    while (checked < KEYS_SIZE) {
+    while (checked < keysSize) {
       const targetKey = orderedKeys[currentIndex]
       if (isIdleSlot(newItems[targetKey])) {
         newItems[targetKey] = item
@@ -43,7 +43,7 @@ const assignItemsToSlots = (
         inserted = true
         break
       }
-      currentIndex = (currentIndex + 1) % KEYS_SIZE
+      currentIndex = (currentIndex + 1) % keysSize
       checked++
     }
 
@@ -51,7 +51,7 @@ const assignItemsToSlots = (
       const fallbackKey = orderedKeys[overwriteIndex]
       newItems[fallbackKey] = item
       idToKey.set(item.id, fallbackKey)
-      currentIndex = (overwriteIndex + 1) % KEYS_SIZE
+      currentIndex = (overwriteIndex + 1) % keysSize
     }
   }
 
@@ -61,7 +61,8 @@ const assignItemsToSlots = (
 export const prepareTasks = (
   tasks: TaskQueueItem[],
   prevState: Record<string, PathSegmentExt | undefined>,
-  prevOverwriteIndex: number
+  prevOverwriteIndex: number,
+  keysSize: number
 ) => {
   let nextOverwriteIndex = prevOverwriteIndex
   let ps = prevState
@@ -95,7 +96,12 @@ export const prepareTasks = (
         ...rowsToItemsMap(rowsToRemove, SegmentState.Removing)
       }
 
-      const phase1 = assignItemsToSlots(itemsWithWillRemove, ps, nextOverwriteIndex)
+      const phase1 = assignItemsToSlots(
+        itemsWithWillRemove,
+        ps,
+        nextOverwriteIndex,
+        keysSize
+      )
       newState.push({
         rows,
         newState: phase1.newItems,
@@ -105,7 +111,12 @@ export const prepareTasks = (
         playRemoveSound: true
       })
 
-      const phase2 = assignItemsToSlots(itemsWithRemoving, phase1.newItems, phase1.nextIndex)
+      const phase2 = assignItemsToSlots(
+        itemsWithRemoving,
+        phase1.newItems,
+        phase1.nextIndex,
+        keysSize
+      )
       newState.push({
         rows,
         newState: phase2.newItems,
@@ -118,7 +129,12 @@ export const prepareTasks = (
       ps = phase2.newItems
       nextOverwriteIndex = phase2.nextIndex
     } else {
-      const result = assignItemsToSlots(itemsMap, ps, nextOverwriteIndex)
+      const result = assignItemsToSlots(
+        itemsMap,
+        ps,
+        nextOverwriteIndex,
+        keysSize
+      )
       newState.push({
         rows,
         newState: result.newItems,

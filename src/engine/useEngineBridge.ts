@@ -4,47 +4,49 @@ import { startWith } from 'rxjs/operators'
 import { Easing, withSequence, withTiming } from 'react-native-reanimated'
 import { scheduleOnRN } from 'react-native-worklets'
 
-import { Subscription } from 'rxjs'
-
 import { BinderHook, useStreamBridge } from '../core/binding'
 import { ANIM } from '../model/animConsts'
-import { CELL_SIZE, EXPLOSION_POOL_SIZE, KEYS, ROWS_COUNT } from '../model/consts'
 import type { PathSegment } from '../model/types'
 import { SegmentState } from '../model/types'
 import type { PathSegmentExt } from '../model/types'
+import type { GameConfig } from '../settings/gameConfig'
 import type { IGameEngine } from '../viewmodels'
 import { nop } from '../utils/nop'
 import type { GestureCompletionOrchestratorApi } from './GestureCompletionOrchestrator'
 import type { SharedValuesMap } from './useSharedValuesMap'
 
-const initialStateValue = {
-  yValue: ROWS_COUNT * CELL_SIZE,
-  xValue: -1 * CELL_SIZE,
-  opacityValue: 0,
-  widthValue: 0,
-  colorValue: '#fff',
-  opacityControlledByAnimation: false
-}
-
-function itemToStateValue(
-  item: PathSegmentExt | undefined
-): typeof initialStateValue & { opacityControlledByAnimation: boolean } {
-  if (!item || item.state === SegmentState.Idle) return initialStateValue
-  const isRemovingPhase =
-    item.state === SegmentState.WillRemove ||
-    item.state === SegmentState.Removing
-  return {
-    yValue: item.rowIndex * CELL_SIZE,
-    xValue: item.start * CELL_SIZE,
-    widthValue: (item.end - item.start) * CELL_SIZE,
-    opacityValue: 0.8,
-    colorValue: item.color,
-    opacityControlledByAnimation: isRemovingPhase
-  }
-}
-
 export type EngineBridgeOptions = {
   orchestrator: GestureCompletionOrchestratorApi
+  config: GameConfig
+}
+
+function createItemToStateValue(config: GameConfig) {
+  const { cellSize, rowsCount, keys } = config
+  const initialStateValue = {
+    yValue: rowsCount * cellSize,
+    xValue: -1 * cellSize,
+    opacityValue: 0,
+    widthValue: 0,
+    colorValue: '#fff',
+    opacityControlledByAnimation: false
+  }
+
+  return function itemToStateValue(
+    item: PathSegmentExt | undefined
+  ): typeof initialStateValue & { opacityControlledByAnimation: boolean } {
+    if (!item || item.state === SegmentState.Idle) return initialStateValue
+    const isRemovingPhase =
+      item.state === SegmentState.WillRemove ||
+      item.state === SegmentState.Removing
+    return {
+      yValue: item.rowIndex * cellSize,
+      xValue: item.start * cellSize,
+      widthValue: (item.end - item.start) * cellSize,
+      opacityValue: 0.8,
+      colorValue: item.color,
+      opacityControlledByAnimation: isRemovingPhase
+    }
+  }
 }
 
 export function useEngineBridge(
@@ -52,7 +54,9 @@ export function useEngineBridge(
   shared: SharedValuesMap,
   options: EngineBridgeOptions
 ): void {
-  const { orchestrator } = options
+  const { orchestrator, config } = options
+  const { cellSize, keys, explosionPoolSize } = config
+  const itemToStateValue = createItemToStateValue(config)
   const nextPoolIndexRef = useRef(0)
   const batchIdRef = useRef(0)
 
@@ -81,7 +85,7 @@ export function useEngineBridge(
         })
         .bindAction(engine.onCompleteEnd$, ({ to, updated }) => {
           orchestrator.providePipelineResult({ to, updated })
-          const targetPx = to * CELL_SIZE
+          const targetPx = to * cellSize
           if (to === 0) {
             shared.translateX.value = 0
             orchestrator.onSnapAnimationComplete()
@@ -151,9 +155,10 @@ export function useEngineBridge(
           }
         }
 
-        for (let i = 0; i < KEYS.length; i++) {
-          const key = KEYS[i]
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i]
           const slot = shared.items[key]
+          if (!slot) continue
           const item = items[key]
           const prevItem = prevItems[key]
           const st = itemToStateValue(item)
@@ -194,18 +199,18 @@ export function useEngineBridge(
             engine.removeItem(key)
             const cellCount = Math.max(
               1,
-              Math.round(slot.width.value / CELL_SIZE)
+              Math.round(slot.width.value / cellSize)
             )
             const colorVal = slot.color.value
             const baseX = slot.translateX.value
             const baseY = slot.translateY.value
 
             for (let c = 0; c < cellCount; c++) {
-              const poolIndex = nextPoolIndexRef.current % EXPLOSION_POOL_SIZE
+              const poolIndex = nextPoolIndexRef.current % explosionPoolSize
               nextPoolIndexRef.current += 1
               const poolSlot = shared.explosionPool[poolIndex]
-              poolSlot.centerX.value = baseX + (c + 0.5) * CELL_SIZE
-              poolSlot.centerY.value = baseY + CELL_SIZE / 2
+              poolSlot.centerX.value = baseX + (c + 0.5) * cellSize
+              poolSlot.centerY.value = baseY + cellSize / 2
               poolSlot.color.value = colorVal
               poolSlot.progress.value = 0
               poolSlot.progress.value = withTiming(1, {
@@ -225,7 +230,6 @@ export function useEngineBridge(
       })
       disposeBag.add(itemsSub)
     },
-    // engine is sole dep; shared and onCompleteEnd are stable (ref/SharedValues)
-    [engine]
+    [engine, config]
   )
 }

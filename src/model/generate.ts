@@ -1,11 +1,12 @@
-import { COLUMNS_COUNT } from './consts'
 import type { PathSegment } from './types'
 
 function generateUniqueId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`
 }
 
-export const generateSegmentsWithGaps = (): PathSegment[] => {
+export const generateSegmentsWithGaps = (
+  columnsCount: number
+): PathSegment[] => {
   const baseColors = [
     '#FF0000',
     '#00FF00',
@@ -14,7 +15,7 @@ export const generateSegmentsWithGaps = (): PathSegment[] => {
     '#FF00FF',
     '#00FFFF'
   ]
-  const lineLength = COLUMNS_COUNT
+  const lineLength = columnsCount
   const segments: PathSegment[] = []
   let currentStart = 0
 

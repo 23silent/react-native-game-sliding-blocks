@@ -3,7 +3,6 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs'
 import { take } from 'rxjs/operators'
 
 import { ANIM } from '../model/animConsts'
-import { KEYS, ROWS_COUNT } from '../model/consts'
 import { ProcessData } from '../model/ProcessData'
 import { prepareTasks } from '../model/prepareTasks'
 import type {
@@ -12,6 +11,7 @@ import type {
   PathSegmentExt,
   TaskQueueItem
 } from '../model/types'
+import type { GameConfig } from '../settings/gameConfig'
 import { runTaskApplyPipeline } from './TaskPipeline'
 
 /**
@@ -27,9 +27,9 @@ export class GameViewModel {
   private applyVersion = 0
   private comboStreak = 0
 
-  readonly items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
-    KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
-  )
+  private readonly keys: string[]
+
+  readonly items$: BehaviorSubject<Partial<Record<string, PathSegmentExt>>>
   readonly activeItem$: Observable<ActiveItem | undefined>
   readonly score$: Observable<number>
   readonly multiplier$: Observable<number>
@@ -46,13 +46,22 @@ export class GameViewModel {
   private processData: ProcessData
 
   constructor(
+    private readonly config: GameConfig,
     private readonly stepComplete$: Observable<void>,
     private readonly overlayFadeOutComplete$: Observable<void>
   ) {
+    this.keys = config.keys
+    this.items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
+      this.keys.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
+    )
+
     SoundPlayer.loadSoundFile('small', 'mp3')
     SoundPlayer.loadSoundFile('big', 'mp3')
 
-    this.processData = new ProcessData()
+    this.processData = new ProcessData({
+      rowsCount: config.rowsCount,
+      columnsCount: config.columnsCount
+    })
     this.activeItem$ = this.activeItemSubject$.asObservable()
     this.score$ = this.scoreSubject$.asObservable()
     this.multiplier$ = this.multiplierSubject$.asObservable()
@@ -103,7 +112,8 @@ export class GameViewModel {
     const prepared = prepareTasks(
       [task],
       this.items$.getValue(),
-      this.nextOverwriteIndex
+      this.nextOverwriteIndex,
+      this.config.keysSize
     )
     if (prepared.length > 0) {
       const { rows: r, newState, nextOverwriteIndex } = prepared[0]
@@ -123,7 +133,7 @@ export class GameViewModel {
     this.rows = []
 
     this.items$.next(
-      KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
+      this.keys.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
     )
     if (wasGameOver) {
       this.overlayFadeOutComplete$.pipe(take(1)).subscribe(() => {
@@ -147,6 +157,7 @@ export class GameViewModel {
     const versionAtStart = this.applyVersion
     this.setBusy(true)
     let hasRemoves = false
+    const { keysSize, rowsCount } = this.config
 
     for (let index = 0; index < tasks.length; index++) {
       if (this.applyVersion !== versionAtStart) return
@@ -176,7 +187,7 @@ export class GameViewModel {
       if (this.applyVersion !== versionAtStart) return
     }
 
-    if (this.rows.filter(row => row.length).length === ROWS_COUNT) {
+    if (this.rows.filter(row => row.length).length === rowsCount) {
       this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
       this.setBusy(false)
       return
@@ -205,7 +216,8 @@ export class GameViewModel {
     const prepared = prepareTasks(
       taskQueue,
       this.items$.getValue(),
-      this.nextOverwriteIndex
+      this.nextOverwriteIndex,
+      this.config.keysSize
     )
     this.applyTask(prepared)
   }
