@@ -10,7 +10,7 @@ import {
 } from '@shopify/react-native-skia'
 
 import { CheckerboardGrid, Panel, SkiaButton, SkiaLabel } from '../../core/skia'
-import React, { memo } from 'react'
+import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
 import {
@@ -20,10 +20,11 @@ import {
   KEYS,
   ROWS_COUNT
 } from '../../model/consts'
-import { SCORE_BAR, TOP_RESTART } from '../../model/layoutConsts'
+import { LOADING_OVERLAY, SCORE_BAR, TOP_RESTART } from '../../model/layoutConsts'
 import { fonts } from '../../utils/fonts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 import { GameCanvasExplosion } from './GameCanvasExplosion'
+import { GameCanvasLoadingOverlay } from './GameCanvasLoadingOverlay'
 import { GameCanvasGhost } from './GameCanvasGhost'
 import { GameCanvasIndicator } from './GameCanvasIndicator'
 import { GameCanvasItem } from './GameCanvasItem'
@@ -49,6 +50,19 @@ type GameCanvasProps = {
   screenHeight: number
 }
 
+const TOTAL_ASSETS = 7 * 4 + 1 // blocks (7 colors × 4 sizes) + bg
+
+function countLoadedAssets(block: BlockMap, bgImage: unknown): number {
+  let loaded = 0
+  for (const color of Object.keys(block)) {
+    for (let i = 0; i < 4; i++) {
+      if (block[color]?.[i] != null) loaded++
+    }
+  }
+  if (bgImage != null) loaded++
+  return loaded
+}
+
 export const GameCanvas = memo(function GameCanvas({
   shared,
   layout,
@@ -57,6 +71,22 @@ export const GameCanvas = memo(function GameCanvas({
   screenHeight
 }: GameCanvasProps): React.JSX.Element {
   const bgImage = useImage(require('../../assets/bg.jpg'))
+
+  const progress = useMemo(
+    () => countLoadedAssets(block, bgImage) / TOTAL_ASSETS,
+    [block, bgImage]
+  )
+  const isAssetsReady = progress >= 1
+
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(true)
+  useEffect(() => {
+    if (!isAssetsReady) return
+    const t = setTimeout(
+      () => setShowLoadingOverlay(false),
+      LOADING_OVERLAY.MIN_DISPLAY_MS
+    )
+    return () => clearTimeout(t)
+  }, [isAssetsReady])
 
   const scoreText = useDerivedValue(() => `${Math.round(shared.score.value)}`)
   const multiplierText = useDerivedValue(
@@ -227,6 +257,14 @@ export const GameCanvas = memo(function GameCanvas({
           gameHeight={GAME_HEIGHT}
         />
       </Group>
+      {/* Loading overlay — full screen, on top */}
+      {showLoadingOverlay && (
+        <GameCanvasLoadingOverlay
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
+          progress={progress}
+        />
+      )}
     </Canvas>
   )
 })

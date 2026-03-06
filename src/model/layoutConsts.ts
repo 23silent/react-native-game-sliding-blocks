@@ -30,3 +30,14 @@ export const GAME_OVER_OVERLAY = {
   /** Vertical offset of button from center */
   BUTTON_TOP_OFFSET: 20
 } as const
+
+/** Loading overlay (preloader) */
+export const LOADING_OVERLAY = {
+  BOX_WIDTH: 260,
+  BOX_HEIGHT: 80,
+  BAR_HEIGHT: 8,
+  BAR_RADIUS: 4,
+  BAR_INSET: 16,
+  /** Minimum time to show loading (ms) — avoids flash on fast loads */
+  MIN_DISPLAY_MS: 600
+} as const
