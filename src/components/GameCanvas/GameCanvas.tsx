@@ -5,13 +5,14 @@ import {
   Image,
   LinearGradient,
   RoundedRect,
+  rect,
+  rrect,
   useImage,
   vec
 } from '@shopify/react-native-skia'
 
 import { CheckerboardGrid, Panel, SkiaButton, SkiaLabel } from '../../core/skia'
 import React, { memo, useEffect, useMemo, useRef } from 'react'
-import { InteractionManager } from 'react-native'
 import { useDerivedValue } from 'react-native-reanimated'
 
 import {
@@ -35,6 +36,19 @@ import { GameCanvasIndicator } from './GameCanvasIndicator'
 import { GameCanvasItem } from './GameCanvasItem'
 import { GameOverOverlay } from './GameOverOverlay'
 import type { BlockMap } from '../../model/types'
+
+const glob = globalThis as unknown as {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number
+  clearIdleCallback?: (id: number) => void
+}
+const scheduleIdle =
+  typeof glob.requestIdleCallback === 'function'
+    ? (cb: () => void) => glob.requestIdleCallback!(cb, { timeout: 100 })
+    : (cb: () => void) => setTimeout(cb, 0) as unknown as number
+const cancelIdle =
+  typeof glob.clearIdleCallback === 'function'
+    ? (id: number) => glob.clearIdleCallback!(id)
+    : (id: number) => clearTimeout(id)
 
 const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
 const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
@@ -94,17 +108,24 @@ export const GameCanvas = memo(function GameCanvas({
     onLoadProgress?.(progress)
   }, [progress, onLoadProgress])
 
+  const idleRef = useRef<number | null>(null)
   useEffect(() => {
     if (!isAssetsReady || !onLoadComplete || completedRef.current) return
     const t = setTimeout(() => {
-      InteractionManager.runAfterInteractions(() => {
+      idleRef.current = scheduleIdle(() => {
         if (!completedRef.current) {
           completedRef.current = true
           onLoadComplete()
         }
       })
     }, LOADING_OVERLAY.MIN_DISPLAY_MS)
-    return () => clearTimeout(t)
+    return () => {
+      clearTimeout(t)
+      if (idleRef.current != null) {
+        cancelIdle(idleRef.current)
+        idleRef.current = null
+      }
+    }
   }, [isAssetsReady, onLoadComplete])
 
   const scoreText = useDerivedValue(() => `${Math.round(shared.score.value)}`)
@@ -264,13 +285,14 @@ export const GameCanvas = memo(function GameCanvas({
           { translateX: layout.gameAreaX },
           { translateY: layout.gameAreaY }
         ]}
+        clip={rrect(rect(0, 0, GAME_WIDTH, GAME_HEIGHT), 16, 16)}
       >
         <Panel
           x={0}
           y={0}
           width={GAME_WIDTH}
           height={GAME_HEIGHT}
-          r={10}
+          r={16}
           color="transparent"
         />
         <CheckerboardGrid
