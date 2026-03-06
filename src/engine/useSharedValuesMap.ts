@@ -45,6 +45,8 @@ export type SharedValuesMap = {
   overlay: {
     opacity: SharedValue<number>
     gameOverScore: SharedValue<number>
+    /** Pause overlay visibility (0 = hidden, 1 = visible) */
+    pauseOpacity: SharedValue<number>
   }
   items: Record<string, ItemSlotSharedValues>
   explosionPool: ExplosionPoolSlotSharedValues[]
@@ -77,7 +79,8 @@ export function useSharedValuesMap(): SharedValuesMap {
 
   const overlay = {
     opacity: useSharedValue(0),
-    gameOverScore: useSharedValue(0)
+    gameOverScore: useSharedValue(0),
+    pauseOpacity: useSharedValue(0)
   }
 
   const items = KEYS.reduce(

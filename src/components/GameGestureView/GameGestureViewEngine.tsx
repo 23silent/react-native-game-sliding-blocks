@@ -60,14 +60,17 @@ export const GameGestureViewEngine = ({
   const pan = useMemo(
     () =>
       Gesture.Pan()
-        .onBegin(e =>
+        .onBegin(e => {
+          'worklet'
+          if (shared.overlay.pauseOpacity.value > 0.5) return
           scheduleOnRN(handleGestureBegin, {
             absoluteX: e.absoluteX,
             absoluteY: e.absoluteY
           })
-        )
+        })
         .onChange(e => {
           'worklet'
+          if (shared.overlay.pauseOpacity.value > 0.5) return
           if (!shared.gesture.active.value) return
           const current = shared.translateX.value
           const minPx = shared.gesture.minPx.value
@@ -77,6 +80,7 @@ export const GameGestureViewEngine = ({
         })
         .onEnd(() => {
           'worklet'
+          if (shared.overlay.pauseOpacity.value > 0.5) return
           scheduleOnRN(handleGestureEnd)
         }),
     [handleGestureBegin, handleGestureEnd, shared]

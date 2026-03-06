@@ -3,32 +3,35 @@
  * Keep these in sync when changing GameCanvas or GameOverOverlay layout.
  */
 
-/** Top actions bar Restart button (hit area and visual) */
-export const TOP_RESTART = {
+/** Top actions bar Pause button (hit area and visual) */
+export const TOP_PAUSE = {
   LEFT_OFFSET: 10,
-  WIDTH: 100,
+  WIDTH: 80,
   TOP_OFFSET: 8,
   HEIGHT: 40
-} as const
-
-/** Top actions bar Menu button (return to home) */
-export const TOP_MENU = {
-  RIGHT_OFFSET: 10,
-  WIDTH: 64,
-  TOP_OFFSET: 8,
-  HEIGHT: 40,
-  /** Gap between stats pills and Menu button */
-  STATS_GAP: 16
 } as const
 
 /** Score bar layout — zones to avoid overlap */
 export const SCORE_BAR = {
   HEIGHT: 56,
   PADDING_H: 16,
-  RESTART_GAP: 12,
+  PAUSE_GAP: 12,
   STATS_GAP: 12,
+  /** Gap between stats pills and right edge (no menu button anymore) */
+  STATS_RIGHT_GAP: 16,
   PILL_PADDING: 10,
   PILL_MIN_WIDTH: 64
+} as const
+
+/** Pause overlay modal */
+export const PAUSE_OVERLAY = {
+  BOX_WIDTH: 200,
+  BOX_HEIGHT: 220,
+  BUTTON_WIDTH: 150,
+  BUTTON_HEIGHT: 40,
+  BUTTON_GAP: 12,
+  /** Vertical offset of first button from box top */
+  FIRST_BUTTON_TOP: 70
 } as const
 
 /** Game-over overlay modal */

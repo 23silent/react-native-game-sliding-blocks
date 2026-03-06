@@ -1,6 +1,7 @@
-import React, { memo, useCallback, useMemo, useState } from 'react'
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { withTiming } from 'react-native-reanimated'
 
 import {
   CELL_SIZE,
@@ -8,7 +9,7 @@ import {
   PADDING,
   ROWS_COUNT
 } from '../../model/consts'
-import { TOP_MENU, TOP_RESTART } from '../../model/layoutConsts'
+import { TOP_PAUSE } from '../../model/layoutConsts'
 import type { PathSegment } from '../../model/types'
 import {
   GameEngine,
@@ -20,59 +21,29 @@ import { useBlocks } from '../../hooks/useBlocks'
 import { GameCanvas } from '../GameCanvas'
 import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
 import { hitTestRestart as hitTestGameOverRestart } from '../../utils/gameOverHitTest'
+import { hitTestPauseOverlay } from '../../utils/pauseOverlayHitTest'
 
 const ACTIONS_BAR_HEIGHT = 70
 const DIVIDER_HEIGHT = 12
 const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
 const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
 
-const getTopRestartBounds = (layout: {
+const getTopPauseBounds = (layout: {
   contentTop: number
   actionsBarLeft: number
 }) => ({
-  left: layout.actionsBarLeft + TOP_RESTART.LEFT_OFFSET,
-  right: layout.actionsBarLeft + TOP_RESTART.LEFT_OFFSET + TOP_RESTART.WIDTH,
-  top: layout.contentTop + TOP_RESTART.TOP_OFFSET,
-  bottom: layout.contentTop + TOP_RESTART.TOP_OFFSET + TOP_RESTART.HEIGHT
+  left: layout.actionsBarLeft + TOP_PAUSE.LEFT_OFFSET,
+  right: layout.actionsBarLeft + TOP_PAUSE.LEFT_OFFSET + TOP_PAUSE.WIDTH,
+  top: layout.contentTop + TOP_PAUSE.TOP_OFFSET,
+  bottom: layout.contentTop + TOP_PAUSE.TOP_OFFSET + TOP_PAUSE.HEIGHT
 })
 
-const hitTestTopRestart = (
+const hitTestTopPause = (
   x: number,
   y: number,
-  layout: { contentTop: number; actionsBarLeft: number; actionsBarWidth: number }
+  layout: { contentTop: number; actionsBarLeft: number }
 ): boolean => {
-  const b = getTopRestartBounds(layout)
-  return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom
-}
-
-const getTopMenuBounds = (layout: {
-  contentTop: number
-  actionsBarLeft: number
-  actionsBarWidth: number
-}) => {
-  const left =
-    layout.actionsBarLeft +
-    layout.actionsBarWidth -
-    TOP_MENU.RIGHT_OFFSET -
-    TOP_MENU.WIDTH
-  return {
-    left,
-    right: left + TOP_MENU.WIDTH,
-    top: layout.contentTop + TOP_MENU.TOP_OFFSET,
-    bottom: layout.contentTop + TOP_MENU.TOP_OFFSET + TOP_MENU.HEIGHT
-  }
-}
-
-const hitTestTopMenu = (
-  x: number,
-  y: number,
-  layout: {
-    contentTop: number
-    actionsBarLeft: number
-    actionsBarWidth: number
-  }
-): boolean => {
-  const b = getTopMenuBounds(layout)
+  const b = getTopPauseBounds(layout)
   return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom
 }
 
@@ -89,10 +60,12 @@ export const GameRootView = memo(function GameRootView({
 }: GameRootViewProps = {}): React.JSX.Element {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const insets = useSafeAreaInsets()
+  const isPausedRef = useRef(false)
 
   const [engine] = useState(() => new GameEngine())
   const shared = useSharedValuesMap()
   const block = useBlocks()
+  const showFinishOption = !!onMenuPress
 
   const layout = useMemo(() => {
     const contentHeight = ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT + GAME_HEIGHT
@@ -130,16 +103,44 @@ export const GameRootView = memo(function GameRootView({
 
   useEngineBridge(engine, shared, { orchestrator })
 
+  const hidePauseOverlay = useCallback(() => {
+    isPausedRef.current = false
+    shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
+  }, [shared.overlay.pauseOpacity])
+
   const handleTapOrRestart = useCallback(
     (x: number, y: number): boolean => {
-      if (onMenuPress && hitTestTopMenu(x, y, layout)) {
-        onMenuPress()
+      // When pause overlay is visible, handle overlay button taps
+      if (isPausedRef.current) {
+        const action = hitTestPauseOverlay(
+          x - layout.gameAreaX,
+          y - layout.gameAreaY,
+          showFinishOption
+        )
+        if (action === 'resume') {
+          hidePauseOverlay()
+          return true
+        }
+        if (action === 'restart') {
+          engine.restart()
+          hidePauseOverlay()
+          return true
+        }
+        if (action === 'finish') {
+          onMenuPress?.()
+          hidePauseOverlay()
+          return true
+        }
+        // Tap elsewhere on overlay - stay paused
         return true
       }
-      if (hitTestTopRestart(x, y, layout)) {
-        engine.restart()
+
+      if (hitTestTopPause(x, y, layout)) {
+        isPausedRef.current = true
+        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
         return true
       }
+
       const gameOver = engine.getGameOver()
       if (
         gameOver &&
@@ -150,7 +151,14 @@ export const GameRootView = memo(function GameRootView({
       }
       return false
     },
-    [engine, layout, onMenuPress]
+    [
+      engine,
+      layout,
+      onMenuPress,
+      showFinishOption,
+      shared.overlay.pauseOpacity,
+      hidePauseOverlay
+    ]
   )
 
   return (
@@ -166,7 +174,7 @@ export const GameRootView = memo(function GameRootView({
         block={block}
         screenWidth={screenWidth}
         screenHeight={screenHeight}
-        showMenuButton={!!onMenuPress}
+        showFinishOption={showFinishOption}
         onLoadProgress={onLoadProgress}
         onLoadComplete={onLoadComplete}
       />
