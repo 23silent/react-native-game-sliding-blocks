@@ -1,6 +1,5 @@
 /**
  * Default values for all settings.
- * Mirrors visualConsts and consts.
  */
 
 import type { AppSettings } from './types'

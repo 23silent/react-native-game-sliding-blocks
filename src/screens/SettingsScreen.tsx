@@ -11,6 +11,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { settingsViewModel } from '../settings'
 import { useSettings } from '../hooks/useSettings'
+import {
+  MENU_BG,
+  PANEL_BG,
+  RESET_BUTTON_BG,
+  RESET_BUTTON_TEXT,
+  TEXT_HINT,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  INPUT_BORDER
+} from '../theme'
 
 type Props = {
   onBack: () => void
@@ -330,7 +340,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.98)',
+    backgroundColor: MENU_BG,
     paddingHorizontal: 24
   },
   backButton: {
@@ -344,12 +354,12 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 16,
-    color: 'rgba(203,213,225,0.9)'
+    color: TEXT_SECONDARY
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: 'white',
+    color: TEXT_PRIMARY,
     marginBottom: 16
   },
   scroll: {
@@ -361,13 +371,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: 'rgba(203,213,225,0.95)',
+    color: TEXT_SECONDARY,
     marginTop: 20,
     marginBottom: 8
   },
   hint: {
     fontSize: 12,
-    color: 'rgba(203,213,225,0.6)',
+    color: TEXT_HINT,
     marginBottom: 8
   },
   row: {
@@ -378,18 +388,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: 'rgba(203,213,225,0.9)',
+    color: TEXT_SECONDARY,
     flex: 1
   },
   input: {
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: PANEL_BG,
     borderWidth: 1,
-    borderColor: 'rgba(71,85,105,0.5)',
+    borderColor: INPUT_BORDER,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
-    color: 'white',
+    color: TEXT_PRIMARY,
     minWidth: 72,
     textAlign: 'right'
   },
@@ -400,13 +410,13 @@ const styles = StyleSheet.create({
   resetButton: {
     marginTop: 32,
     paddingVertical: 14,
-    backgroundColor: 'rgba(239,68,68,0.2)',
+    backgroundColor: RESET_BUTTON_BG,
     borderRadius: 10,
     alignItems: 'center'
   },
   resetText: {
     fontSize: 16,
-    color: 'rgba(248,113,113,0.95)',
+    color: RESET_BUTTON_TEXT,
     fontWeight: '600'
   }
 })

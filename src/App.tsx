@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { CanvasErrorBoundary } from './components/CanvasErrorBoundary'
 import type { Route } from './navigation/types'
 import { settingsViewModel } from './settings'
-import { SPLASH_DURATION_MS } from './model/animConsts'
+import { ComposableGameScreen } from './screens/ComposableGameScreen'
 import { GameScreen } from './screens/GameScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { ScoreBoardScreen } from './screens/ScoreBoardScreen'
@@ -24,7 +24,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     if (route !== 'splash') return
-    const t = setTimeout(() => setRoute('home'), SPLASH_DURATION_MS)
+    const t = setTimeout(() => setRoute('home'), 500)
     return () => clearTimeout(t)
   }, [route])
 
@@ -47,6 +47,9 @@ function App(): React.JSX.Element {
           )}
           {route === 'game' && (
             <GameScreen onMenuPress={goHome} />
+          )}
+          {route === 'composable-game' && (
+            <ComposableGameScreen onMenuPress={goHome} />
           )}
           {route === 'settings' && (
             <SettingsScreen onBack={goHome} />

@@ -8,7 +8,13 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { HOME_SCREEN, MENU_BG } from '../model/layoutConsts'
+import {
+  BUTTON_PRIMARY,
+  BUTTON_SECONDARY,
+  HOME_SCREEN,
+  MENU_BG,
+  TEXT_PRIMARY
+} from '../theme'
 import type { Route } from '../navigation/types'
 
 type Props = {
@@ -54,6 +60,16 @@ export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
             styles.buttonSecondary,
             pressed && styles.buttonPressed
           ]}
+          onPress={() => onNavigate('composable-game')}
+        >
+          <Text style={styles.buttonText}>Composable Game</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonSecondary,
+            pressed && styles.buttonPressed
+          ]}
           onPress={() => onNavigate('settings')}
         >
           <Text style={styles.buttonText}>Settings</Text>
@@ -74,7 +90,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: 'white',
+    color: TEXT_PRIMARY,
     textAlign: 'center'
   },
   buttons: {
@@ -89,10 +105,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   buttonPrimary: {
-    backgroundColor: 'rgba(59,130,246,0.9)'
+    backgroundColor: BUTTON_PRIMARY
   },
   buttonSecondary: {
-    backgroundColor: 'rgba(59,130,246,0.35)'
+    backgroundColor: BUTTON_SECONDARY
   },
   buttonPressed: {
     opacity: 0.85
@@ -100,6 +116,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: 'white'
+    color: TEXT_PRIMARY
   }
 })

@@ -1,1 +1,7 @@
-export type Route = 'splash' | 'home' | 'game' | 'settings' | 'scoreboard'
+export type Route =
+  | 'splash'
+  | 'home'
+  | 'game'
+  | 'composable-game'
+  | 'settings'
+  | 'scoreboard'

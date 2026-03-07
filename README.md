@@ -10,16 +10,16 @@ React Native is rarely the first tool that comes to mind for game development, b
 
 ### Game Mechanics
 
-- **Grid** — 8 columns × 10 rows of cells
+- **Grid** — 8 columns × 10 rows of cells (configurable)
 - **Blocks** — Colored segments of varying lengths (1–4 cells). Drag them left or right to reposition.
-- **Clearing** — Fill a row completely (8 cells) to clear it. Segments disappear and blocks above drop.
+- **Clearing** — Fill a row completely to clear it. Segments disappear and blocks above drop.
 - **Super segments** — Rare black segments that, when cleared, also wipe overlapping blocks in adjacent rows. Handy for chain combos.
 - **Score & multiplier** — Animated display so you can track your progress as you go.
 - **Restart** — Fresh start whenever you need one.
 
 ### Architecture
 
-The app uses **MVVM** with RxJS and Reanimated. ViewModels hold game logic; Views render Skia Canvas nodes driven by SharedValues. A single **Engine** facade composes ViewModels and exposes a React-agnostic API. See [Architectural Concepts](#architectural-concepts) below for the key design principles.
+The app uses **MVVM** with RxJS and Reanimated. ViewModels hold game logic; Views render Skia Canvas nodes driven by SharedValues. A single **Engine** facade composes ViewModels and exposes a React-agnostic API. See [slidingBlocks/CONCEPTS.md](slidingBlocks/CONCEPTS.md) for the full architectural guide.
 
 ## Stack
 
@@ -34,47 +34,47 @@ The app uses **MVVM** with RxJS and Reanimated. ViewModels hold game logic; View
 | **State / Streams** | RxJS 7.x |
 | **Platforms** | iOS, Android |
 
-**Requirements**: Node.js ≥ 22.11.0 (you’ll need this before running the app)
+**Requirements**: Node.js ≥ 22.11.0 (you'll need this before running the app)
+
+## SlidingBlocks Module
+
+The game lives in the **`slidingBlocks/`** folder—a self-contained module with no bundled assets or side effects. The host app provides everything:
+
+| Responsibility | Host provides |
+|----------------|---------------|
+| **Config** | Grid size, layout, settings |
+| **Assets** | Block images, background image (optional; fallbacks: solid color bg, Skia-drawn blocks) |
+| **Sounds** | Via callbacks: `onRemovingStart` (row clear), `onFitComplete` with `{ hadActualFit }` (slide) |
+| **Persistence** | Score, high score, settings via callbacks |
+
+### APIs
+
+- **Declarative**: `<SlidingBlocks config={...} callbacks={...} assets={...} />` — all-in-one component
+- **Composable**: `useSlidingBlocks(props)` → `{ Root, ScoreBar, GameArea, ref }` — build custom layouts
+- **Low-level**: `GameRootView` — minimal wrapper when you need full control
 
 ## Architectural Concepts
 
 The architecture is built around a few core principles:
 
-- **No React commits during gameplay** — Game state (score, items, gestures, overlays) is held in RxJS streams and Reanimated SharedValues. The bridge (`useEngineBridge`) subscribes to RxJS and writes into SharedValues. React components never call `setState` or `useReducer` for game logic. Re-renders only occur on mount and rare layout changes (e.g. rotation).
+- **No React commits during gameplay** — Game state is held in RxJS streams and Reanimated SharedValues. The bridge (`useEngineBridge`) subscribes to RxJS and writes into SharedValues. React components never call `setState` for game logic.
 
-- **Pre-rendered UI** — The Skia Canvas declares all nodes (grid, 48 item slots, ghost, indicator, game-over overlay) upfront. Nothing is conditionally mounted from game state. Visibility and position are driven purely by SharedValues. No `{condition && <Component />}` that would trigger reconciliation.
+- **Pre-rendered UI** — The Skia Canvas declares all nodes upfront. Visibility and position are driven purely by SharedValues. No reconciliation from game state.
 
-- **Single binding point** — One `useEngineBridge` hook wires all engine streams to SharedValues. No per-component subscriptions or BinderHooks. Subscriptions are created once and cleaned up on unmount.
+- **Single binding point** — One `useEngineBridge` hook wires all engine streams to SharedValues.
 
-- **React-agnostic engine** — `GameEngine` and its ViewModels (GameViewModel, GestureCoordinator) have no React or Reanimated imports. They can be unit-tested without a renderer and reused from non-React entry points.
+- **React-agnostic engine** — `GameEngine` and its ViewModels have no React or Reanimated imports. They can be unit-tested without a renderer.
 
-- **MVVM layering** — **Model** (domain: ProcessData, fit, remove, generate, types). **ViewModels** (presentation: GameViewModel, GestureCoordinator, GameEngine). **Binding** (engine: RxJS → SharedValues). **View** (React components that render the Canvas).
-
-### Reusing for New Games
-
-The **`core/`** folder holds game-agnostic pieces you can copy into new projects:
-
-- **`core/binding/`** — `BinderHook`, `DisposeBag`, `useStreamBridge` for RxJS → SharedValues
-- **`core/CONCEPTS.md`** — Describes the patterns, how to apply them, and a step-by-step recipe for a new game
-
-Use `core` for the bridge pattern; keep game logic (model, viewmodels, engine) in your game module.
+- **Host owns side effects** — Sound, persistence, and analytics are injected via callbacks. SlidingBlocks knows nothing about platforms or external services.
 
 ## Performance & Technical Approach
 
-We aimed for **smooth, responsive gameplay** and leaned on a few solid patterns:
-
-- **Skia rendering** — `@shopify/react-native-skia` uses the same 2D engine as Chrome. Drawing happens on the native thread, so we avoid flooding the JS bridge.
-- **Reanimated + Worklets** — Animations and gesture feedback run on the UI thread. Touch feels instant, and we steer clear of JS-thread jank.
-- **Reactive state** — RxJS streams drive game logic. SharedValues drive the UI. The bridge is the only place that connects them.
-- **Pre-rendered canvas** — All Skia nodes exist from the start; SharedValues control opacity, position, and size. No reconciliation from game state.
-- **Batched processing** — The game loop uses batched tasks and binary search for gap/overlap checks, keeping per-frame work light.
-- **TypeScript** — Strict typing and clear interfaces for safer refactors and predictable behavior.
-
-All of that adds up to smooth 60fps, snappy touch response, and efficient resource use on both iOS and Android.
+- **Skia rendering** — Drawing happens on the native thread.
+- **Reanimated + Worklets** — Animations and gesture feedback run on the UI thread.
+- **Reactive state** — RxJS streams drive game logic; SharedValues drive the UI.
+- **Batched processing** — Batched tasks and binary search keep per-frame work light.
 
 ## Packages
-
-Here’s what powers the game under the hood:
 
 ### Core Dependencies
 
@@ -88,7 +88,7 @@ Here’s what powers the game under the hood:
 | `rxjs` | Reactive streams for game state |
 | `react-native-safe-area-context` | Safe area insets |
 | `react-native-svg` | SVG support |
-| `react-native-sound-player` | Audio playback |
+| `react-native-sound-player` | Audio (used by host app; not by slidingBlocks) |
 
 ### Dev Dependencies
 
@@ -100,16 +100,22 @@ Here’s what powers the game under the hood:
 ## Project Structure
 
 ```
-├── src/
-│   ├── core/                   # Reusable across games (see core/CONCEPTS.md)
-│   │   ├── binding/            # BinderHook, DisposeBag, useStreamBridge
-│   │   └── CONCEPTS.md         # No commits, pre-rendered UI, patterns, recipe for new games
-│   ├── model/                  # Domain layer
-│   ├── viewmodels/             # Presentation logic
-│   ├── engine/                 # Game-specific binding (uses core)
-│   ├── components/             # View layer
-│   ├── hooks/
-│   └── utils/
+├── slidingBlocks/              # Game module (no bundled assets, host injects everything)
+│   ├── engine/                 # Pure game logic, RxJS, no React
+│   │   ├── core/               # BinderHook, pipeline, binding utilities
+│   │   ├── model/              # Domain types, fit, remove, generate
+│   │   └── viewmodels/         # GameViewModel, GestureCoordinator, TaskPipeline
+│   ├── bridge/                 # RxJS → SharedValues (useEngineBridge, GestureCompletionOrchestrator)
+│   ├── ui/                     # React components, Skia, contexts
+│   ├── config.ts               # computeGameConfig, toEngineConfig
+│   ├── types.ts                # GameLayoutSettings, BlockSettings, etc.
+│   └── CONCEPTS.md             # Architectural patterns and recipe for new games
+├── src/                        # Host app
+│   ├── screens/                # GameScreen, ComposableGameScreen
+│   ├── assets/                 # slidingBlocksAssets (block images, bg) — host provides
+│   ├── theme/
+│   └── hooks/
+├── assets/                     # App assets (blocks, bg, icons)
 ├── ios/
 ├── android/
 ├── index.js
@@ -118,24 +124,13 @@ Here’s what powers the game under the hood:
 
 ## Getting Started
 
-Clone the repo, install dependencies, and you're good to go:
-
 ```bash
-# Install dependencies
 yarn install
-# or: npm install
-
-# Start Metro bundler
 yarn start
-
-# Run on iOS (in another terminal)
-yarn ios
-
-# Or run on Android
-yarn android
+yarn ios    # or: yarn android
 ```
 
-Make sure you have the React Native environment set up for [iOS](https://reactnative.dev/docs/environment-setup) or [Android](https://reactnative.dev/docs/environment-setup). Then fire up the app and enjoy.
+Make sure you have the React Native environment set up for [iOS](https://reactnative.dev/docs/environment-setup) or [Android](https://reactnative.dev/docs/environment-setup).
 
 ### Scripts
 
@@ -148,12 +143,11 @@ Make sure you have the React Native environment set up for [iOS](https://reactna
 
 ## Plans / TODO
 
-- **Improve design** — Polish UI, theming, and visual feedback (e.g. clear animations, particle effects).
-- **Persist state** — Save game state (and optionally high score) so players can resume or compare runs.
-- **Better score calculation** — Richer scoring (combo bonuses, super-segment rewards, difficulty scaling).
-- **Sound & haptics** — Tie in `react-native-sound-player` and haptic feedback for clears and moves.
-- **Difficulty / settings** — Configurable grid size, speed, or difficulty levels for replayability.
+- **Improve design** — Polish UI, theming, and visual feedback.
+- **Persist state** — Save game state and high score so players can resume.
+- **Better score calculation** — Combo bonuses, super-segment rewards, difficulty scaling.
+- **Difficulty / settings** — Configurable grid size, speed, or difficulty levels.
 
 ## License
 
-MIT License — free for personal and commercial use. Go ahead and tinker, share, or build on it.
+MIT License — free for personal and commercial use.

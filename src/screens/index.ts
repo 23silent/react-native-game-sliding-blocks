@@ -1,3 +1,4 @@
+export { ComposableGameScreen } from './ComposableGameScreen'
 export { GameScreen } from './GameScreen'
 export { HomeScreen } from './HomeScreen'
 export { ScoreBoardScreen } from './ScoreBoardScreen'

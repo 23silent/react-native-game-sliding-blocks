@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { MENU_BG } from '../model/layoutConsts'
+import { MENU_BG, TEXT_PRIMARY } from '../theme'
 
 export function SplashScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets()
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: 'white',
+    color: TEXT_PRIMARY,
     textAlign: 'center'
   }
 })

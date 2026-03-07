@@ -2,6 +2,13 @@ import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import {
+  MENU_BG,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  TEXT_MUTED
+} from '../theme'
+
 type Props = {
   onBack: () => void
 }
@@ -25,7 +32,7 @@ export function ScoreBoardScreen({ onBack }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.98)',
+    backgroundColor: MENU_BG,
     paddingHorizontal: 24
   },
   backButton: {
@@ -39,16 +46,16 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 16,
-    color: 'rgba(203,213,225,0.9)'
+    color: TEXT_SECONDARY
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: 'white',
+    color: TEXT_PRIMARY,
     marginBottom: 16
   },
   placeholder: {
     fontSize: 16,
-    color: 'rgba(203,213,225,0.7)'
+    color: TEXT_MUTED
   }
 })
