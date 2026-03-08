@@ -14,10 +14,9 @@ export {
   type IGameEngine
 } from './engine'
 export {
+  type GameStateSnapshot,
   getLayoutVersion,
-  isSnapshotCompatible,
-  type GameStateSnapshot
-} from './engine'
+  isSnapshotCompatible} from './engine'
 export type {
   AnimationSettings,
   FeedbackOpacitySettings

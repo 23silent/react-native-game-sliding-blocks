@@ -3,8 +3,6 @@ import { take } from 'rxjs/operators'
 
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
-import type { GameStateSnapshot } from '../state'
-import { getLayoutVersion } from '../state'
 import { ANIM, type AnimConfig } from '../model/animConsts'
 import { prepareTasks } from '../model/prepareTasks'
 import { ProcessData } from '../model/ProcessData'
@@ -14,6 +12,8 @@ import type {
   PathSegmentExt,
   TaskQueueItem
 } from '../model/types'
+import type { GameStateSnapshot } from '../state'
+import { getLayoutVersion } from '../state'
 import { runTaskApplyPipeline } from './TaskPipeline'
 
 /**

@@ -3,8 +3,8 @@ import { Subject } from 'rxjs'
 
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
-import type { GameStateSnapshot } from '../state'
 import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
+import type { GameStateSnapshot } from '../state'
 import { GameViewModel } from './GameViewModel'
 import { type CompleteEndResult, type GestureBounds,GestureCoordinator } from './GestureCoordinator'
 

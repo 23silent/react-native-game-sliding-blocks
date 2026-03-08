@@ -1,7 +1,7 @@
 import type { EngineConfig } from './config'
 import type { GameEngineHost } from './host'
-import type { GameStateSnapshot } from './state'
 import type { PathSegment } from './model/types'
+import type { GameStateSnapshot } from './state'
 import { GameEngine } from './viewmodels/GameEngine'
 
 export type AnimOverrides = {
