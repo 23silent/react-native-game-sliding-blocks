@@ -10,6 +10,7 @@ import SoundPlayer from 'react-native-sound-player'
 
 import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
 import { useSettings } from '../hooks/useSettings'
+import { addScore } from '../scoreStore'
 import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 
 type Props = {
@@ -65,6 +66,9 @@ export function GameScreen({ onMenuPress }: Props): React.JSX.Element {
           theme={SLIDING_BLOCKS_THEME}
           callbacks={{
             onFinish: onMenuPress,
+            onGameOver: (score) => {
+              addScore(score).catch(() => {})
+            },
             onRemovingStart: () => {
               try {
                 SoundPlayer.playSoundFile('big', 'mp3')
