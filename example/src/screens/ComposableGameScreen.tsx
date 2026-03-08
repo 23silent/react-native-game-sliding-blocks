@@ -227,22 +227,22 @@ const styles = StyleSheet.create({
     zIndex: 20
   },
   menuButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(59,130,246,0.5)',
-    borderRadius: 8
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(139,90,43,0.6)',
+    borderRadius: 10
   },
   pauseButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(168,85,247,0.5)',
-    borderRadius: 8
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(212,163,96,0.35)',
+    borderRadius: 10
   },
   menuButtonPressed: {
-    opacity: 0.8
+    opacity: 0.85
   },
   menuButtonText: {
-    color: 'white',
+    color: '#f5ebe0',
     fontWeight: '600',
     fontSize: 14
   }

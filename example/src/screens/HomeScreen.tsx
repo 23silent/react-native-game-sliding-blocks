@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -14,10 +15,14 @@ import { useSettings } from '../hooks/useSettings'
 import type { Route } from '../navigation/types'
 import {
   BUTTON_PRIMARY,
+  BUTTON_PRIMARY_TEXT,
   BUTTON_SECONDARY,
+  CARD_BG,
   HOME_SCREEN,
   MENU_BG,
-  TEXT_PRIMARY
+  TEXT_HINT,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY
 } from '../theme'
 
 type Props = {
@@ -49,63 +54,88 @@ export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}
     >
-      <Text style={styles.title}>Sliding Blocks</Text>
-      <View style={[styles.buttons, { marginTop: height * 0.08 }]}>
-        {hasStoredState && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonPrimary,
-              pressed && styles.buttonPressed
-            ]}
-            onPress={() => onNavigate('game-resume')}
-          >
-            <Text style={styles.buttonText}>Resume</Text>
-          </Pressable>
-        )}
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { minHeight: height }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Sliding Blocks</Text>
+          <Text style={styles.tagline}>Slide blocks to clear rows</Text>
+        </View>
+
+        <View style={[styles.card, { marginTop: height * 0.06 }]}>
+          <Text style={styles.cardLabel}>Play</Text>
+          <View style={styles.buttons}>
+            {hasStoredState && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  styles.buttonPrimary,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={() => onNavigate('game-resume')}
+              >
+                <Text style={[styles.buttonText, styles.buttonPrimaryText]}>
+                  Resume
+                </Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                hasStoredState ? styles.buttonSecondary : styles.buttonPrimary,
+                pressed && styles.buttonPressed
+              ]}
+              onPress={() => onNavigate('game')}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  hasStoredState ? undefined : styles.buttonPrimaryText
+                ]}
+              >
+                {hasStoredState ? 'New Game' : 'Start Game'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Scores & Settings</Text>
+          <View style={styles.buttons}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                styles.buttonSecondary,
+                pressed && styles.buttonPressed
+              ]}
+              onPress={() => onNavigate('scoreboard')}
+            >
+              <Text style={styles.buttonText}>Score Board</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                styles.buttonSecondary,
+                pressed && styles.buttonPressed
+              ]}
+              onPress={() => onNavigate('settings')}
+            >
+              <Text style={styles.buttonText}>Settings</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <Pressable
           style={({ pressed }) => [
-            styles.button,
-            hasStoredState ? styles.buttonSecondary : styles.buttonPrimary,
-            pressed && styles.buttonPressed
-          ]}
-          onPress={() => onNavigate('game')}
-        >
-          <Text style={styles.buttonText}>
-            {hasStoredState ? 'New Game' : 'Start Game'}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonSecondary,
-            pressed && styles.buttonPressed
-          ]}
-          onPress={() => onNavigate('scoreboard')}
-        >
-          <Text style={styles.buttonText}>Score Board</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonSecondary,
+            styles.composableLink,
             pressed && styles.buttonPressed
           ]}
           onPress={() => onNavigate('composable-game')}
         >
-          <Text style={styles.buttonText}>Composable Game</Text>
+          <Text style={styles.composableText}>Composable demo →</Text>
         </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonSecondary,
-            pressed && styles.buttonPressed
-          ]}
-          onPress={() => onNavigate('settings')}
-        >
-          <Text style={styles.buttonText}>Settings</Text>
-        </Pressable>
-      </View>
+      </ScrollView>
     </View>
   )
 }
@@ -115,21 +145,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: MENU_BG,
     alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: 24
   },
+  scrollContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 24
+  },
+  header: {
+    alignItems: 'center'
+  },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 36,
+    fontWeight: '800',
     color: TEXT_PRIMARY,
-    textAlign: 'center'
+    textAlign: 'center',
+    letterSpacing: 0.5
+  },
+  tagline: {
+    fontSize: 15,
+    color: TEXT_HINT,
+    marginTop: 8
+  },
+  card: {
+    width: '100%',
+    maxWidth: 280,
+    backgroundColor: CARD_BG,
+    borderRadius: HOME_SCREEN.CARD_BORDER_RADIUS,
+    padding: HOME_SCREEN.CARD_PADDING,
+    marginBottom: 16
+  },
+  cardLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: TEXT_HINT,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 12
   },
   buttons: {
     alignItems: 'center',
     gap: HOME_SCREEN.BUTTON_GAP
   },
   button: {
-    width: HOME_SCREEN.BUTTON_WIDTH,
+    width: '100%',
     height: HOME_SCREEN.BUTTON_HEIGHT,
     borderRadius: 12,
     alignItems: 'center',
@@ -142,11 +201,23 @@ const styles = StyleSheet.create({
     backgroundColor: BUTTON_SECONDARY
   },
   buttonPressed: {
-    opacity: 0.85
+    opacity: 0.88
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: TEXT_PRIMARY
+    color: TEXT_SECONDARY
+  },
+  buttonPrimaryText: {
+    color: BUTTON_PRIMARY_TEXT
+  },
+  composableLink: {
+    marginTop: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16
+  },
+  composableText: {
+    fontSize: 14,
+    color: TEXT_HINT
   }
 })

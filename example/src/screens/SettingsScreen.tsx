@@ -709,11 +709,11 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY
   },
   presetButtonActive: {
-    borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.15)'
+    borderColor: 'rgba(212,163,96,0.9)',
+    backgroundColor: 'rgba(212,163,96,0.15)'
   },
   presetButtonTextActive: {
-    color: '#3b82f6'
+    color: 'rgba(212,163,96,0.95)'
   },
   advancedButton: {
     paddingVertical: 14,
@@ -737,15 +737,15 @@ const styles = StyleSheet.create({
     backgroundColor: PANEL_BG
   },
   performanceModeButtonActive: {
-    borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.15)'
+    borderColor: 'rgba(212,163,96,0.9)',
+    backgroundColor: 'rgba(212,163,96,0.15)'
   },
   performanceModeText: {
     fontSize: 13,
     color: TEXT_SECONDARY
   },
   performanceModeTextActive: {
-    color: '#3b82f6',
+    color: 'rgba(212,163,96,0.95)',
     fontWeight: '600'
   },
   performanceModeHint: {

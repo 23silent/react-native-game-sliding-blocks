@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { MENU_BG, TEXT_PRIMARY } from '../theme'
+import { MENU_BG, TEXT_HINT, TEXT_PRIMARY } from '../theme'
 
 export function SplashScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets()
@@ -14,7 +14,10 @@ export function SplashScreen(): React.JSX.Element {
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}
     >
-      <Text style={styles.title}>Sliding Blocks</Text>
+      <View style={styles.logoArea}>
+        <Text style={styles.title}>Sliding Blocks</Text>
+        <Text style={styles.tagline}>Slide blocks to clear rows</Text>
+      </View>
     </View>
   )
 }
@@ -27,10 +30,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24
   },
+  logoArea: {
+    alignItems: 'center'
+  },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 36,
+    fontWeight: '800',
     color: TEXT_PRIMARY,
-    textAlign: 'center'
+    textAlign: 'center',
+    letterSpacing: 0.5
+  },
+  tagline: {
+    fontSize: 15,
+    color: TEXT_HINT,
+    marginTop: 10
   }
 })
