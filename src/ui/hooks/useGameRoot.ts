@@ -6,7 +6,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
 import { withTiming } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
   useEngineBridge,
@@ -30,6 +29,8 @@ import { hitTestPauseOverlay } from '../utils/pauseOverlayHitTest'
 import { useBlocks } from './useBlocks'
 
 const { ACTIONS_BAR_HEIGHT, DIVIDER_HEIGHT } = GAME_ROOT
+
+const ZERO_INSETS = { top: 0, bottom: 0, left: 0, right: 0 }
 
 export type UseGameRootOptions = {
   layoutConfig: GameLayoutSettings
@@ -71,8 +72,9 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   } = options
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
-  const insets = useSafeAreaInsets()
   const isPausedRef = useRef(false)
+  // Safe area is host responsibility — wrap in SafeAreaView if needed
+  const insets = ZERO_INSETS
 
   const config = useMemo(
     () => computeGameConfig(layoutConfig, screenWidth),

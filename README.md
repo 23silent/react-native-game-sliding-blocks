@@ -27,7 +27,6 @@ Install these in your app (they are **peer dependencies**):
 | `react-native-gesture-handler` | Touch and gestures |
 | `react-native-worklets` | UI thread worklets |
 | `rxjs` | Reactive streams |
-| `react-native-safe-area-context` | Safe area insets |
 
 **Requirements:** Node.js ≥ 22.11.0
 
@@ -147,7 +146,7 @@ For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root
 ### Low-level API
 
 - **`GameRootView`** — Minimal wrapper when you need full control over layout and bridge.
-- **`createGameEngine(config, host?)`** — Create a React-agnostic engine for headless testing or custom integration.
+- **`createGameEngine(config, host?, options?)`** — Create a React-agnostic engine for headless testing or custom integration. `options` can include `onRowAdded`.
 - **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
 
 ---
@@ -176,8 +175,8 @@ type SlidingBlocksConfig = {
 | `onRestart` | User restarts (from overlay) |
 | `onFinish` | User taps "Finish" in pause overlay |
 | `onGestureStart` / `onGestureEnd` | Pan starts/ends |
-| `onRemovingStart` / `onRemovingEnd` | Row clear animation starts/ends |
-| `onFitStart` / `onFitComplete` | Slide/snap animation; `onFitComplete({ hadActualFit })` for slide sound |
+| `onRemovingStart` / `onRemovingEnd` | Row clear animation starts/ends; payload `{ hasSuper: boolean }` |
+| `onFitStart` / `onFitComplete` | Slide/snap animation; `onFitComplete({ hadActualFit })` for slide sound (hadActualFit = true when blocks actually moved) |
 | `onRowAdded` | New row added at top |
 
 ### SlidingBlocksAssets
@@ -223,8 +222,9 @@ react-native-sliding-blocks/
 │   ├── bridge/         # RxJS → SharedValues (useEngineBridge, GestureCompletionOrchestrator)
 │   ├── engine/         # Game logic, RxJS, no React
 │   ├── ui/             # React components, Skia, contexts
+│   ├── constants/      # Layout constants, game config
+│   ├── types/          # Settings, layout types
 │   ├── config.ts
-│   ├── types.ts
 │   ├── CONCEPTS.md     # Architecture guide
 │   └── index.ts
 ├── example/            # Example React Native app
@@ -246,7 +246,7 @@ yarn example:ios          # Run iOS (in another terminal)
 yarn example:android      # Run Android (in another terminal)
 ```
 
-**Developing the library?** The example uses a Babel alias so changes in `src/` trigger hot reload. See [DEVELOPMENT.md](DEVELOPMENT.md).
+**Developing the library?** The example uses Metro's custom resolver so changes in `src/` trigger hot reload. See [DEVELOPMENT.md](DEVELOPMENT.md).
 
 Requires [React Native environment setup](https://reactnative.dev/docs/environment-setup).
 
