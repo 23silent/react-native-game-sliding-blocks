@@ -28,6 +28,7 @@ type Props = {
 /** Wrapper that uses layout from context to position GameArea and add background. */
 function ComposableGameAreaWithLayout({
   GameArea,
+  blockRenderMode,
   onLoadProgress,
   onLoadComplete
 }: {
@@ -37,6 +38,7 @@ function ComposableGameAreaWithLayout({
     onLoadProgress?: (progress: number) => void
     onLoadComplete?: () => void
   }>
+  blockRenderMode: 'skia' | 'image'
   onLoadProgress?: (progress: number) => void
   onLoadComplete?: () => void
 }) {
@@ -59,7 +61,7 @@ function ComposableGameAreaWithLayout({
         ]}
       >
         <GameArea
-          blockRenderMode="skia"
+          blockRenderMode={blockRenderMode}
           showFinishOption
           onLoadProgress={onLoadProgress}
           onLoadComplete={onLoadComplete}
@@ -151,7 +153,7 @@ export function ComposableGameScreen({
       animations: settings.animations,
       feedback: settings.feedback
     },
-    blockRenderMode: 'skia',
+    blockRenderMode: settings.blockRenderMode,
     showFinishOption: true,
     onLoadProgress,
     onLoadComplete
@@ -187,6 +189,7 @@ export function ComposableGameScreen({
           {/* Background + positioned board - host controls layout */}
           <ComposableGameAreaWithLayout
             GameArea={GameArea}
+            blockRenderMode={settings.blockRenderMode}
             onLoadProgress={onLoadProgress}
             onLoadComplete={onLoadComplete}
           />

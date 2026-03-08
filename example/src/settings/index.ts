@@ -6,6 +6,7 @@ export type {
   AnimationSettings,
   AppSettings,
   AppSettingsOverrides,
+  BlockRenderMode,
   BlockSettings,
   CheckerboardSettings,
   ExplosionPresetsSettings,

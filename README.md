@@ -225,7 +225,7 @@ Partial overrides merged with defaults. All optional.
 | `explosion` | `radius`, `baseParticleSize`, `riseHeight`, `fallDistance`, `pictureSize` | Explosion particles |
 | `checkerboard` | `defaultBaseColor`, `defaultDarkOpacity`, `defaultLightOpacity` | Grid styling |
 | `explosionPresets` | `particleCount`, `trajectoryPresetCount`, `shapePresetCount`, `performanceMode` | Explosion variety; `performanceMode: 'low'` for low-end devices |
-| **`animations`** | `completeSnapMs`, `itemDropMs`, `willRemovePulseMs`, `removeFadeMs`, `gameOverInMs`, `gameOverOutMs`, `pauseOverlayMs`, `loadingBarFillMs` | Animation durations (ms) |
+| **`animations`** | `completeSnapMs`, `itemDropMs`, `willRemovePulseMs`, `removeFadeMs`, `removeExplosionMs`, `gameOverInMs`, `gameOverOutMs`, `pauseOverlayMs`, `loadingBarFillMs` | Animation durations (ms). `removeFadeMs` = block opacity fade; `removeExplosionMs` = explosion particles. |
 | **`feedback`** | `blockIdle`, `willRemovePulseMin`, `ghostActive`, `indicatorActive` | Opacity values (0–1) for blocks, ghost, indicator |
 
 ---

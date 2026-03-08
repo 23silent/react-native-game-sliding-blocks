@@ -133,7 +133,7 @@ export function GameScreen({ onMenuPress, shouldResume = false }: Props): React.
             animations: settings.animations,
             feedback: settings.feedback
           }}
-          blockRenderMode="skia"
+          blockRenderMode={settings.blockRenderMode}
           showFinishOption
           onLoadProgress={onLoadProgress}
           onLoadComplete={onLoadComplete}

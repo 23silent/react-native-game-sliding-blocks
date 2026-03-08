@@ -52,7 +52,10 @@ export type AnimationSettings = {
   completeSnapMs: number
   itemDropMs: number
   willRemovePulseMs: number
+  /** Block opacity fade-out when removing. Controls when onRemovingEnd fires. */
   removeFadeMs: number
+  /** Explosion particle animation duration. Independent from block opacity. */
+  removeExplosionMs: number
   gameOverInMs: number
   gameOverOutMs: number
   pauseOverlayMs: number

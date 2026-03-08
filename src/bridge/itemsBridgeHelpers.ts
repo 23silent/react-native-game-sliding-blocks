@@ -152,7 +152,7 @@ export function applyRemovingAnimation(
     poolSlot.color.value = colorVal
     poolSlot.progress.value = 0
     poolSlot.progress.value = withTiming(1, {
-      duration: anim.removeFadeMs
+      duration: anim.removeExplosionMs
     })
   }
 

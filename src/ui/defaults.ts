@@ -44,6 +44,7 @@ export const DEFAULT_SLIDING_BLOCKS_SETTINGS: AppSettings = {
     itemDropMs: 200,
     willRemovePulseMs: 80,
     removeFadeMs: 600,
+    removeExplosionMs: 800,
     gameOverInMs: 250,
     gameOverOutMs: 200,
     pauseOverlayMs: 200,

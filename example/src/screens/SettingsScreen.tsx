@@ -43,26 +43,17 @@ function SettingRow({
 
 function NumericInput({
   value,
-  onChange,
-  min,
-  max
+  onChange
 }: {
   value: number
   onChange: (v: number) => void
-  min?: number
-  max?: number
 }) {
   const handleChange = useCallback(
     (text: string) => {
       const n = parseFloat(text)
-      if (!Number.isNaN(n)) {
-        let v = n
-        if (min != null && v < min) v = min
-        if (max != null && v > max) v = max
-        onChange(v)
-      }
+      if (!Number.isNaN(n) && n >= 0) onChange(n)
     },
-    [onChange, min, max]
+    [onChange]
   )
   return (
     <TextInput
@@ -105,22 +96,64 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Block render mode */}
+        <Text style={styles.sectionTitle}>Block style</Text>
+        <SettingRow label="Rendering">
+          <View style={styles.performanceModeRow}>
+            <Pressable
+              style={[
+                styles.performanceModeButton,
+                settings.blockRenderMode === 'image' &&
+                  styles.performanceModeButtonActive
+              ]}
+              onPress={() => update({ blockRenderMode: 'image' })}
+            >
+              <Text
+                style={[
+                  styles.performanceModeText,
+                  settings.blockRenderMode === 'image' &&
+                    styles.performanceModeTextActive
+                ]}
+              >
+                Image
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.performanceModeButton,
+                settings.blockRenderMode === 'skia' &&
+                  styles.performanceModeButtonActive
+              ]}
+              onPress={() => update({ blockRenderMode: 'skia' })}
+            >
+              <Text
+                style={[
+                  styles.performanceModeText,
+                  settings.blockRenderMode === 'skia' &&
+                    styles.performanceModeTextActive
+                ]}
+              >
+                Skia
+              </Text>
+            </Pressable>
+          </View>
+        </SettingRow>
+        <Text style={styles.hint}>
+          Image: PNG assets. Skia: drawn blocks (no assets).
+        </Text>
+
         {/* Block */}
         <Text style={styles.sectionTitle}>Block</Text>
         <SettingRow label="Radius">
           <NumericInput
             value={settings.block.radius}
             onChange={v => update({ block: { radius: v } })}
-            min={1}
-            max={32}
           />
         </SettingRow>
         <SettingRow label="Border width">
           <NumericInput
             value={settings.block.borderWidth}
             onChange={v => update({ block: { borderWidth: v } })}
-            min={0}
-            max={4}
           />
         </SettingRow>
         <SettingRow label="Border color">
@@ -135,8 +168,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
           <NumericInput
             value={settings.block.superGradientSteps}
             onChange={v => update({ block: { superGradientSteps: v } })}
-            min={2}
-            max={50}
           />
         </SettingRow>
         <SettingRow label="Frost highlight color">
@@ -155,8 +186,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ block: { frostHighlightHeightRatio: v } })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
 
@@ -166,40 +195,30 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
           <NumericInput
             value={settings.explosion.radius}
             onChange={v => update({ explosion: { radius: v } })}
-            min={20}
-            max={300}
           />
         </SettingRow>
         <SettingRow label="Particle size">
           <NumericInput
             value={settings.explosion.baseParticleSize}
             onChange={v => update({ explosion: { baseParticleSize: v } })}
-            min={4}
-            max={48}
           />
         </SettingRow>
         <SettingRow label="Rise height">
           <NumericInput
             value={settings.explosion.riseHeight}
             onChange={v => update({ explosion: { riseHeight: v } })}
-            min={0}
-            max={300}
           />
         </SettingRow>
         <SettingRow label="Fall distance">
           <NumericInput
             value={settings.explosion.fallDistance}
             onChange={v => update({ explosion: { fallDistance: v } })}
-            min={0}
-            max={800}
           />
         </SettingRow>
         <SettingRow label="Picture size">
           <NumericInput
             value={settings.explosion.pictureSize}
             onChange={v => update({ explosion: { pictureSize: v } })}
-            min={100}
-            max={800}
           />
         </SettingRow>
 
@@ -224,8 +243,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 checkerboard: { defaultDarkOpacity: v }
               })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
         <SettingRow label="Light opacity">
@@ -236,8 +253,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 checkerboard: { defaultLightOpacity: v }
               })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
 
@@ -251,8 +266,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 explosionPresets: { particleCount: v }
               })
             }
-            min={2}
-            max={24}
           />
         </SettingRow>
         <SettingRow label="Trajectory presets">
@@ -265,8 +278,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 }
               })
             }
-            min={2}
-            max={16}
           />
         </SettingRow>
         <SettingRow label="Shape presets">
@@ -279,8 +290,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 }
               })
             }
-            min={2}
-            max={16}
           />
         </SettingRow>
         <SettingRow label="Performance (low-end)">
@@ -345,8 +354,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { completeSnapMs: v } })
             }
-            min={20}
-            max={200}
           />
         </SettingRow>
         <SettingRow label="Item drop">
@@ -355,8 +362,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { itemDropMs: v } })
             }
-            min={50}
-            max={600}
           />
         </SettingRow>
         <SettingRow label="Will remove pulse">
@@ -365,18 +370,22 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { willRemovePulseMs: v } })
             }
-            min={20}
-            max={200}
           />
         </SettingRow>
-        <SettingRow label="Remove fade">
+        <SettingRow label="Remove fade (block opacity)">
           <NumericInput
             value={settings.animations.removeFadeMs}
             onChange={v =>
               update({ animations: { removeFadeMs: v } })
             }
-            min={200}
-            max={1200}
+          />
+        </SettingRow>
+        <SettingRow label="Remove explosion (particles)">
+          <NumericInput
+            value={settings.animations.removeExplosionMs}
+            onChange={v =>
+              update({ animations: { removeExplosionMs: v } })
+            }
           />
         </SettingRow>
         <SettingRow label="Game over in">
@@ -385,8 +394,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { gameOverInMs: v } })
             }
-            min={100}
-            max={600}
           />
         </SettingRow>
         <SettingRow label="Game over out">
@@ -395,8 +402,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { gameOverOutMs: v } })
             }
-            min={100}
-            max={600}
           />
         </SettingRow>
         <SettingRow label="Pause overlay">
@@ -405,8 +410,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { pauseOverlayMs: v } })
             }
-            min={100}
-            max={600}
           />
         </SettingRow>
         <SettingRow label="Loading bar fill">
@@ -415,8 +418,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ animations: { loadingBarFillMs: v } })
             }
-            min={100}
-            max={1000}
           />
         </SettingRow>
 
@@ -428,8 +429,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ feedback: { blockIdle: v } })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
         <SettingRow label="Will remove pulse min">
@@ -438,8 +437,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ feedback: { willRemovePulseMin: v } })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
         <SettingRow label="Ghost active">
@@ -448,8 +445,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ feedback: { ghostActive: v } })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
         <SettingRow label="Indicator active">
@@ -458,8 +453,6 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             onChange={v =>
               update({ feedback: { indicatorActive: v } })
             }
-            min={0}
-            max={1}
           />
         </SettingRow>
 
@@ -470,24 +463,18 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
           <NumericInput
             value={settings.gameLayout.rowsCount}
             onChange={v => update({ gameLayout: { rowsCount: v } })}
-            min={6}
-            max={16}
           />
         </SettingRow>
         <SettingRow label="Columns">
           <NumericInput
             value={settings.gameLayout.columnsCount}
             onChange={v => update({ gameLayout: { columnsCount: v } })}
-            min={4}
-            max={12}
           />
         </SettingRow>
         <SettingRow label="Padding">
           <NumericInput
             value={settings.gameLayout.padding}
             onChange={v => update({ gameLayout: { padding: v } })}
-            min={0}
-            max={60}
           />
         </SettingRow>
         <SettingRow label="Explosion pool size">
@@ -498,16 +485,12 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
                 gameLayout: { explosionPoolSize: v }
               })
             }
-            min={4}
-            max={32}
           />
         </SettingRow>
         <SettingRow label="Keys size">
           <NumericInput
             value={settings.gameLayout.keysSize}
             onChange={v => update({ gameLayout: { keysSize: v } })}
-            min={24}
-            max={80}
           />
         </SettingRow>
 

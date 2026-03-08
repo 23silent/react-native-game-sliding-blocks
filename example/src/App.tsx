@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { BackHandler, StyleSheet } from 'react-native'
+import { BackHandler, StatusBar, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -39,6 +39,7 @@ function App(): React.JSX.Element {
 
   return (
     <GestureHandlerRootView style={styles.root}>
+      <StatusBar hidden />
       <SafeAreaProvider>
         <CanvasErrorBoundary>
           {route === 'splash' && <SplashScreen />}
