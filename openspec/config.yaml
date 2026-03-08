@@ -6,7 +6,7 @@ context: |
   Tech stack: React Native, TypeScript, @shopify/react-native-skia, react-native-reanimated, react-native-gesture-handler, RxJS
   Architecture: MVVM — engine (RxJS, no React) ← bridge (RxJS→SharedValues) ← ui (Skia, SharedValues)
   Domain: Sliding block puzzle game library — grid, colored segments, fill rows to clear, blocks drop
-  Key patterns: No React commits during gameplay, pre-rendered UI, single binding point, animation-driven flow, configurable animations and feedback via settings, game state persistence (host-provided)
+  Key patterns: No React commits during gameplay, pre-rendered UI, single binding point, animation-driven flow, configurable animations/feedback/explosion via settings, performance tuning (explosionEnabled, circlesOnly, blockRenderMode; presets host-defined), game state persistence (host-provided)
   See src/CONCEPTS.md for detailed architecture
 
 # Per-artifact rules (optional)

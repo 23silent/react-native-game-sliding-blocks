@@ -29,10 +29,13 @@ SlidingBlocks has **no bundled assets** and **no platform dependencies**. The ho
 | **Sounds** | Via callbacks: `onRemovingStart` (row clear), `onFitComplete` with `{ hadActualFit }` (slide) | No sound |
 | **Persistence** | `onScoreChange`, `onGameOver`, `onGameStateChange`, `initialState` | None |
 | **Animation/feedback tuning** | `settings.animations` (durations in ms), `settings.feedback` (opacity values) | SDK defaults |
+| **Performance tuning** | `settings.explosionPresets` (explosionEnabled, circlesOnly, particleCount), `blockRenderMode`, `settings.animations` | Explosion on, mixed shapes, default durations |
 
 Sound and other side effects are never invoked by the engine. The bridge calls `onRemovingStart` when rows enter removal, and `onFitComplete({ hadActualFit })` when the snap animation finishes—only `hadActualFit: true` when blocks actually moved.
 
-Animation durations (snap, drop, remove fade, game-over overlay, pause overlay, loading bar) and feedback opacities (block idle, ghost, indicator, will-remove pulse) are configurable via `settings.animations` and `settings.feedback`. The bridge and engine use these values instead of hardcoded constants. For a pre-created engine, pass `animOverrides` to `createGameEngine` so step-complete timeouts match the UI animations.
+**Animation durations** (snap, drop, remove fade, game-over overlay, pause overlay, loading bar) and **feedback opacities** (block idle, ghost, indicator, will-remove pulse) are configurable via `settings.animations` and `settings.feedback`. The bridge and engine use these values instead of hardcoded constants. For a pre-created engine, pass `animOverrides` to `createGameEngine` so step-complete timeouts match the UI animations.
+
+**Performance tuning** — The host can reduce load on low-end devices via settings: `explosionPresets.explosionEnabled: false` disables explosion particles; `explosionPresets.circlesOnly: true` uses circles-only particles (faster than mixed shapes); setting `animations.*` durations to 0 disables animations; `blockRenderMode: 'image'` or `'skia'` selects block rendering. **Performance presets** (e.g. extra-low, low, fine, good) are host-defined: create overrides and apply via the host's settings store. The example app shows this in `example/src/settings/performancePresets.ts`.
 
 **Game state persistence** — The engine exposes `getGameState()` returning a `GameStateSnapshot` (rows, score, multiplier, layoutVersion, gameOver). The host persists this (e.g. AsyncStorage) and passes it back as `initialState` to resume after app kill. The engine calls `onGameStateChange(state)` when state changes so the host can persist. Use `isSnapshotCompatible(snapshot, config)` before resuming to ensure the saved state matches the current layout.
 

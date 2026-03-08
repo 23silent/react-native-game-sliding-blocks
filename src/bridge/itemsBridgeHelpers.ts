@@ -121,6 +121,7 @@ export function applyRemovingAnimation(
   batchIdRef: RefLike<number>,
   engine: { removeItem: (k: string) => void },
   anim: AnimationSettings,
+  explosionEnabled: boolean,
   onRemovingEnd?: (payload: { hasSuper: boolean }) => void
 ): void {
   removingHasSuperRef.current = removingHasSuperRef.current || !!item?.super
@@ -137,23 +138,25 @@ export function applyRemovingAnimation(
 
   engine.removeItem(key)
 
-  const cellCount = Math.max(1, Math.round(slot.width.value / cellSize))
-  const colorVal = slot.color.value
-  const baseX = slot.translateX.value
-  const baseY = slot.translateY.value
+  if (explosionEnabled) {
+    const cellCount = Math.max(1, Math.round(slot.width.value / cellSize))
+    const colorVal = slot.color.value
+    const baseX = slot.translateX.value
+    const baseY = slot.translateY.value
 
-  for (let c = 0; c < cellCount; c++) {
-    const poolIndex = nextPoolIndexRef.current % explosionPoolSize
-    nextPoolIndexRef.current += 1
-    const poolSlot: ExplosionPoolSlotSharedValues =
-      shared.explosionPool[poolIndex]
-    poolSlot.centerX.value = baseX + (c + 0.5) * cellSize
-    poolSlot.centerY.value = baseY + cellSize / 2
-    poolSlot.color.value = colorVal
-    poolSlot.progress.value = 0
-    poolSlot.progress.value = withTiming(1, {
-      duration: anim.removeExplosionMs
-    })
+    for (let c = 0; c < cellCount; c++) {
+      const poolIndex = nextPoolIndexRef.current % explosionPoolSize
+      nextPoolIndexRef.current += 1
+      const poolSlot: ExplosionPoolSlotSharedValues =
+        shared.explosionPool[poolIndex]
+      poolSlot.centerX.value = baseX + (c + 0.5) * cellSize
+      poolSlot.centerY.value = baseY + cellSize / 2
+      poolSlot.color.value = colorVal
+      poolSlot.progress.value = 0
+      poolSlot.progress.value = withTiming(1, {
+        duration: anim.removeExplosionMs
+      })
+    }
   }
 
   slot.opacity.value = withTiming(

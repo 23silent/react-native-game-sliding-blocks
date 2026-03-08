@@ -35,8 +35,10 @@ export type ExplosionPresetsSettings = {
   particleCount: number
   trajectoryPresetCount: number
   shapePresetCount: number
-  /** 'low' = fewer particles, circles only - smoother on low-end Android */
-  performanceMode?: 'default' | 'low'
+  /** When true, use circles only (faster). */
+  circlesOnly?: boolean
+  /** When false, explosion particles are not rendered. */
+  explosionEnabled?: boolean
 }
 
 /** Game layout consts */

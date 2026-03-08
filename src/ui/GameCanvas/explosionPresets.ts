@@ -75,25 +75,22 @@ export function buildExplosionPresets(
     particleCount,
     trajectoryPresetCount,
     shapePresetCount,
-    performanceMode = 'default'
+    circlesOnly = false
   } = config
-  const circlesOnly = performanceMode === 'low'
-  const effectiveParticleCount = circlesOnly
-    ? Math.max(4, Math.ceil(particleCount / 2))
-    : particleCount
 
   const trajectoryPresets = Array.from(
     { length: trajectoryPresetCount },
-    (_, i) => buildTrajectoryPreset(1000 + i * 7919, effectiveParticleCount)
+    (_, i) => buildTrajectoryPreset(1000 + i * 7919, particleCount)
   )
   const shapePresets = Array.from(
     { length: shapePresetCount },
-    (_, i) => buildShapePreset(2000 + i * 7919, effectiveParticleCount, circlesOnly)
+    (_, i) =>
+      buildShapePreset(2000 + i * 7919, particleCount, circlesOnly)
   )
   return {
     trajectoryPresets,
     shapePresets,
-    particleCount: effectiveParticleCount,
+    particleCount,
     presetCount: Math.max(trajectoryPresetCount, shapePresetCount)
   }
 }

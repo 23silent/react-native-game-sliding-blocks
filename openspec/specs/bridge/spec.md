@@ -50,6 +50,13 @@ The bridge SHALL use animation durations and opacity values from settings (`anim
 
 #### Scenario: Settings-driven animations
 
-- **WHEN** the bridge runs animations (snap, drop, will-remove pulse, remove fade, overlay fade)
-- **THEN** it uses `settings.animations` for durations (completeSnapMs, itemDropMs, willRemovePulseMs, removeFadeMs, gameOverInMs, gameOverOutMs, pauseOverlayMs, loadingBarFillMs)
+- **WHEN** the bridge runs animations (snap, drop, will-remove pulse, remove fade, explosion, overlay fade)
+- **THEN** it uses `settings.animations` for durations (completeSnapMs, itemDropMs, willRemovePulseMs, removeFadeMs, removeExplosionMs, gameOverInMs, gameOverOutMs)
 - **AND** it uses `settings.feedback` for opacities (blockIdle, willRemovePulseMin, ghostActive, indicatorActive)
+- **AND** `pauseOverlayMs` and `loadingBarFillMs` are used by the UI layer (useGameRoot, PreloaderOverlay), not the bridge
+
+#### Scenario: Explosion disabled
+
+- **WHEN** `settings.explosionPresets.explosionEnabled` is `false`
+- **THEN** the bridge SHALL NOT trigger explosion pool animations on row clear
+- **AND** the block opacity fade animation SHALL still run

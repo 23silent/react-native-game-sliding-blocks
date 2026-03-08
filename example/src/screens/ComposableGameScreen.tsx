@@ -125,7 +125,7 @@ export function ComposableGameScreen({
     theme: SLIDING_BLOCKS_THEME,
     callbacks: {
       onFinish: onMenuPress,
-      onGameOver: (score) => {
+      onGameOver: score => {
         addScore(score).catch(() => {})
       },
       onRemovingStart: () => {

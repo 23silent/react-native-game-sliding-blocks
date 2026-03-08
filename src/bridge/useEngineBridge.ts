@@ -25,6 +25,8 @@ export type EngineBridgeOptions = {
   config: GameConfig
   animations: AnimationSettings
   feedback: FeedbackOpacitySettings
+  /** When false, explosion particles are not animated. */
+  explosionEnabled?: boolean
   onScoreChange?: (score: number) => void
   onGameOver?: (score: number) => void
   onRemovingStart?: (payload: RemovingPayload) => void
@@ -43,6 +45,7 @@ export function useEngineBridge(
     config,
     animations,
     feedback,
+    explosionEnabled = true,
     onScoreChange,
     onGameOver,
     onRemovingStart,
@@ -208,6 +211,7 @@ export function useEngineBridge(
               batchIdRef,
               engine,
               animations,
+              explosionEnabled,
               onRemovingEnd
             )
           } else if (!st.opacityControlledByAnimation) {
@@ -234,6 +238,6 @@ export function useEngineBridge(
       })
       disposeBag.add(itemsSub)
     },
-    [engine, config, animations, feedback]
+    [engine, config, animations, feedback, explosionEnabled]
   )
 }

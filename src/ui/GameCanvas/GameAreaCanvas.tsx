@@ -121,15 +121,16 @@ export const GameAreaCanvas = memo(function GameAreaCanvas({
             blockTheme={theme.block}
           />
         ))}
-        {shared.explosionPool.map((slot, i) => (
-          <GameCanvasExplosion
-            key={i}
-            slot={slot}
-            slotIndex={i}
-            explosion={settings.explosion}
-            explosionPresets={settings.explosionPresets}
-          />
-        ))}
+        {settings.explosionPresets?.explosionEnabled !== false &&
+          shared.explosionPool.map((slot, i) => (
+            <GameCanvasExplosion
+              key={i}
+              slot={slot}
+              slotIndex={i}
+              explosion={settings.explosion}
+              explosionPresets={settings.explosionPresets}
+            />
+          ))}
         <GameOverOverlay
           overlay={shared.overlay}
           gameWidth={gameWidth}

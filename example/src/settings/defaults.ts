@@ -34,7 +34,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     particleCount: 8,
     trajectoryPresetCount: 8,
     shapePresetCount: 8,
-    performanceMode: 'default' as const
+    circlesOnly: false,
+    explosionEnabled: true
   },
   gameLayout: {
     rowsCount: 10,

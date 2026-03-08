@@ -58,9 +58,7 @@ export function ScoreBoardScreen({ onBack }: Props): React.JSX.Element {
   }, [refresh])
 
   const isEmpty =
-    scores &&
-    scores.highScores.length === 0 &&
-    scores.lastScore == null
+    scores && scores.highScores.length === 0 && scores.lastScore == null
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>

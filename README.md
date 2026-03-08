@@ -91,7 +91,7 @@ All-in-one component. Pass config, callbacks, and optional assets/theme.
 | `callbacks` | `SlidingBlocksCallbacks` | Score, game over, pause, restart, sound hooks, etc. |
 | `assets` | `SlidingBlocksAssets` | Block PNGs, background image. Omit for Skia fallbacks |
 | `theme` | `Partial<SlidingBlocksTheme>` | Overlay, score bar, block colors |
-| `settings` | `SlidingBlocksSettingsOverrides` | Block, explosion, checkerboard, explosionPresets, **animations** (durations in ms), **feedback** (opacity values). Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
+| `settings` | `SlidingBlocksSettingsOverrides` | Block, explosion, checkerboard, explosionPresets, **animations** (durations in ms), **feedback** (opacity values). Tune for performance: `explosionPresets.explosionEnabled: false` disables explosion; `circlesOnly: true` uses circles-only particles; set `animations.*` to 0 to disable animations. |
 | `engine` | `IGameEngine` | Optional pre-created engine |
 | `initialState` | `GameStateSnapshot \| null` | Restore from persisted state; host loads from storage to resume after app kill |
 | `onGameStateChange` | `(state: GameStateSnapshot) => void` | Called when state changes; host should persist (e.g. AsyncStorage). Snapshot includes `gameOver` flag; host typically clears when game over. |
@@ -224,9 +224,11 @@ Partial overrides merged with defaults. All optional.
 | `block` | `radius`, `borderWidth`, `borderColor`, `frostHighlightColor`, `frostHighlightHeightRatio`, `superGradientColors`, `superGradientSteps` | Block appearance |
 | `explosion` | `radius`, `baseParticleSize`, `riseHeight`, `fallDistance`, `pictureSize` | Explosion particles |
 | `checkerboard` | `defaultBaseColor`, `defaultDarkOpacity`, `defaultLightOpacity` | Grid styling |
-| `explosionPresets` | `particleCount`, `trajectoryPresetCount`, `shapePresetCount`, `performanceMode` | Explosion variety; `performanceMode: 'low'` for low-end devices |
+| `explosionPresets` | `particleCount`, `trajectoryPresetCount`, `shapePresetCount`, `circlesOnly`, `explosionEnabled` | Explosion variety. Set `explosionEnabled: false` to disable. `circlesOnly: true` for faster rendering. |
 | **`animations`** | `completeSnapMs`, `itemDropMs`, `willRemovePulseMs`, `removeFadeMs`, `removeExplosionMs`, `gameOverInMs`, `gameOverOutMs`, `pauseOverlayMs`, `loadingBarFillMs` | Animation durations (ms). `removeFadeMs` = block opacity fade; `removeExplosionMs` = explosion particles. |
 | **`feedback`** | `blockIdle`, `willRemovePulseMin`, `ghostActive`, `indicatorActive` | Opacity values (0–1) for blocks, ghost, indicator |
+
+**Performance presets** are host-defined. Create presets as `SlidingBlocksSettingsOverrides` (e.g. `blockRenderMode`, `explosionPresets`, `animations`) and apply via your settings store. The example app defines four presets—extra-low, low, fine, good—in `example/src/settings/performancePresets.ts` and exposes them as one-tap buttons with a "Custom settings" section for manual overrides.
 
 ---
 
@@ -275,7 +277,12 @@ react-native-sliding-blocks/
 
 ## Example App
 
-An example app lives in `example/`—it shows the declarative and composable APIs, settings, sounds, themes, and **game state persistence** (AsyncStorage) with a Resume button when stored state exists.
+An example app lives in `example/`—it demonstrates:
+
+- Declarative and composable APIs
+- **Settings screen** with performance presets (extra-low, low, fine, good) and a collapsible "Custom settings" section for manual overrides
+- **Game state persistence** (AsyncStorage) with a Resume button when stored state exists
+- Sounds, themes, block images
 
 ```bash
 # From repo root

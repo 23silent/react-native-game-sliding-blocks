@@ -31,7 +31,7 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
       presetsConfig.particleCount,
       presetsConfig.trajectoryPresetCount,
       presetsConfig.shapePresetCount,
-      presetsConfig.performanceMode
+      presetsConfig.circlesOnly
     ]
   )
 

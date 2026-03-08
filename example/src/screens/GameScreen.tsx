@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
+import type { GameStateSnapshot } from 'react-native-sliding-blocks'
 import {
   cancelIdle,
   isSnapshotCompatible,
@@ -7,15 +8,10 @@ import {
   scheduleIdle,
   SlidingBlocks
 } from 'react-native-sliding-blocks'
-import type { GameStateSnapshot } from 'react-native-sliding-blocks'
 import SoundPlayer from 'react-native-sound-player'
 
 import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
-import {
-  clearGameState,
-  loadGameState,
-  saveGameState
-} from '../gameStateStore'
+import { clearGameState, loadGameState, saveGameState } from '../gameStateStore'
 import { useSettings } from '../hooks/useSettings'
 import { addScore } from '../scoreStore'
 import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
@@ -31,7 +27,10 @@ type Props = {
  * after the preloader has painted. Host persists game state via AsyncStorage so
  * the game can resume after app kill.
  */
-export function GameScreen({ onMenuPress, shouldResume = false }: Props): React.JSX.Element {
+export function GameScreen({
+  onMenuPress,
+  shouldResume = false
+}: Props): React.JSX.Element {
   const settings = useSettings()
   const [progress, setProgress] = useState(0)
   const [ready, setReady] = useState(false)
@@ -47,7 +46,7 @@ export function GameScreen({ onMenuPress, shouldResume = false }: Props): React.
   }, [])
 
   useEffect(() => {
-    loadGameState().then((state) => {
+    loadGameState().then(state => {
       if (
         shouldResume &&
         state &&
@@ -105,7 +104,7 @@ export function GameScreen({ onMenuPress, shouldResume = false }: Props): React.
           theme={SLIDING_BLOCKS_THEME}
           callbacks={{
             onFinish: onMenuPress,
-            onGameOver: (score) => {
+            onGameOver: score => {
               addScore(score).catch(() => {})
             },
             onRemovingStart: () => {

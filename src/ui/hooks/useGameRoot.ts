@@ -165,6 +165,7 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     config,
     animations: settings.animations,
     feedback: settings.feedback,
+    explosionEnabled: settings.explosionPresets?.explosionEnabled ?? true,
     onScoreChange: (score) => callbacksRef.current.onScoreChange?.(score),
     onGameOver: (score) => callbacksRef.current.onGameOver?.(score),
     onRemovingStart: (p) => callbacksRef.current.onRemovingStart?.(p),

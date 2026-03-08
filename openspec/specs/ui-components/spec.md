@@ -16,7 +16,8 @@ The UI SHALL NOT trigger `setState` or `useReducer` from game state updates. Rea
 - **WHEN** the Canvas renders
 - **THEN** all Skia nodes (slots, overlay, indicator) are declared upfront
 - **AND** visibility and position are controlled by SharedValues (opacity, translateX)
-- **AND** no `{condition && <Component />}` that would trigger reconciliation during gameplay
+- **AND** no `{condition && <Component />}` driven by game state (score, items, overlays) that would trigger reconciliation during gameplay
+- **AND** settings-driven conditionals (e.g. explosion on/off) are acceptable, since settings are stable during active play
 
 ### Requirement: Declarative reactions and presets
 
@@ -45,9 +46,26 @@ The UI SHALL accept optional block images and background image from the host. Wh
 - **THEN** the UI uses the host's PNG assets for blocks
 - **AND** background image is used if provided
 
-### Requirement: Configurable settings (animations, feedback)
+### Requirement: Configurable settings (animations, feedback, explosion)
 
-The UI SHALL accept `settings` that include `animations` (durations in ms) and `feedback` (opacity values). These are merged with defaults and passed through to the bridge and components. PreloaderOverlay SHALL accept optional `fillAnimationDurationMs` for consistency with `settings.animations.loadingBarFillMs`.
+The UI SHALL accept `settings` that include `animations` (durations in ms), `feedback` (opacity values), and `explosionPresets`. These are merged with defaults and passed through to the bridge and components. PreloaderOverlay SHALL accept optional `fillAnimationDurationMs` for consistency with `settings.animations.loadingBarFillMs`.
+
+#### Scenario: Explosion and performance
+
+- **WHEN** `settings.explosionPresets.explosionEnabled` is `false`
+- **THEN** explosion particles are not rendered or animated
+- **AND** the bridge does not trigger explosion pool animations on row clear
+
+- **WHEN** `settings.explosionPresets.circlesOnly` is `true`
+- **THEN** explosion particles use circles only (faster rendering)
+- **AND** shapes are not mixed (rects, rrects, diamonds)
+
+#### Scenario: Performance presets (host-defined)
+
+- **WHEN** the host defines performance presets (e.g. extra-low, low, fine, good)
+- **THEN** presets are applied as `SlidingBlocksSettingsOverrides` (blockRenderMode, explosionPresets, animations)
+- **AND** the host is responsible for storing and applying preset overrides
+- **AND** the library provides no built-in presets
 
 ### Requirement: Game state persistence (host-provided)
 

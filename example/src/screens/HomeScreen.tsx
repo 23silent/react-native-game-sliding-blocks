@@ -6,8 +6,8 @@ import {
   useWindowDimensions,
   View
 } from 'react-native'
-import { isSnapshotCompatible } from 'react-native-sliding-blocks'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { isSnapshotCompatible } from 'react-native-sliding-blocks'
 
 import { loadGameState } from '../gameStateStore'
 import { useSettings } from '../hooks/useSettings'
@@ -31,7 +31,7 @@ export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
   const [hasStoredState, setHasStoredState] = useState(false)
 
   useEffect(() => {
-    loadGameState().then((state) => {
+    loadGameState().then(state => {
       setHasStoredState(
         !!(
           state &&
