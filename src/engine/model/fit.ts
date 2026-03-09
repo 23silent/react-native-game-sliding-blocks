@@ -1,4 +1,4 @@
-import type { PathSegment } from './types'
+import type { Board, PathSegment } from './types'
 
 type Gap = { start: number; end: number }
 
@@ -46,11 +46,11 @@ const findContainingGap = (gaps: Gap[], item: PathSegment): number => {
 }
 
 export const fit = (
-  data: PathSegment[][],
+  data: Board,
   columnsCount: number
-): { data: PathSegment[][]; hasChanges: boolean } => {
+): { data: Board; hasChanges: boolean } => {
   let hasChanges = false
-  const workingData = data.map(row => [...row])
+  const workingData: Board = data.map(row => [...row])
 
   do {
     hasChanges = false
@@ -87,7 +87,7 @@ export const fit = (
   }
 }
 
-const arraysEqual = (a: PathSegment[][], b: PathSegment[][]): boolean => {
+const arraysEqual = (a: Board, b: Board): boolean => {
   if (a.length !== b.length) return false
   return a.every(
     (row, i) =>

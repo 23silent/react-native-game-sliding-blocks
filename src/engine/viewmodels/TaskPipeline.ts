@@ -2,12 +2,16 @@ import { firstValueFrom, Observable, race, timer } from 'rxjs'
 import { mapTo, take } from 'rxjs/operators'
 
 import { createPipeline } from '../core/pipeline'
-import type { PathSegment, PathSegmentExt } from '../model/types'
+import type {
+  PathSegment,
+  PathSegmentExt,
+  ProcessorStep
+} from '../model/types'
 import { nop } from '../utils/nop'
 export type PreparedTask = {
   rows: PathSegment[][]
   newState: Record<string, PathSegmentExt | undefined>
-  step: string
+  step: ProcessorStep
   nextOverwriteIndex: number
   score: number
 }
@@ -15,7 +19,7 @@ export type PreparedTask = {
 export type TaskApplyContext = {
   task: PreparedTask
   stepComplete$: Observable<void>
-  getStepCompleteTimeout: (step: string) => number
+  getStepCompleteTimeout: (step: ProcessorStep) => number
   onScoreUpdate: (score: number) => void
   onApplyState: (nextOverwriteIndex: number, rows: PathSegment[][], newItems: Record<string, PathSegmentExt | undefined>) => void
   onRowAdded?: (row: PathSegment[]) => void

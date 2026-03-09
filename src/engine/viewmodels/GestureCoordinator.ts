@@ -1,17 +1,18 @@
 import { filter, map, Observable, share, Subject, tap } from 'rxjs'
 
 import { mapToVoid } from '../core/binding'
-import type { PathSegment } from '../model/types'
+import type { Board } from '../model/types'
+import { translateSegmentOnBoard } from '../model/transform'
 
 export interface IRootForGesture {
-  getRows(): PathSegment[][]
-  getBusy(): boolean
+  getRows(): Board
+  isProcessing(): boolean
   setActiveItem(
     item?: { id: string; width: number; left: number; top: number; color: string }
   ): void
 }
 
-export type CompleteEndResult = { to: number; updated?: PathSegment[][] }
+export type CompleteEndResult = { to: number; updated?: Board }
 
 export type GestureBounds = { minPx: number; maxPx: number }
 
@@ -61,51 +62,33 @@ export class GestureCoordinator {
     this.gesturePipeline$ = this.endValues$.pipe(
       filter(
         () =>
-          !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
+          !!this.activeItemCoords && !this.root.isProcessing() && !!this.minMax
       ),
-      map((currentTranslateX): CompleteEndResult => {
-        const mm = this.minMax!
-        const coords = this.activeItemCoords!
+      map((currentTranslateX: number): CompleteEndResult => {
+        const movementBounds = this.minMax!
+        const activeItemPosition = this.activeItemCoords!
         const to = clamp(
           Math.round(currentTranslateX / cellSize),
-          mm.min,
-          mm.max
+          movementBounds.min,
+          movementBounds.max
         )
         return {
           to,
           updated:
             to === 0
               ? undefined
-              : this.applyTranslation(
+              : translateSegmentOnBoard(
                   this.root.getRows(),
-                  coords.rowIndex,
-                  coords.cellIndex,
+                  activeItemPosition.rowIndex,
+                  activeItemPosition.cellIndex,
                   to
                 )
         }
       }),
-      tap(result => onCompleteEnd$.next(result)),
+      tap((result: CompleteEndResult) => onCompleteEnd$.next(result)),
       mapToVoid(),
       share()
     )
-  }
-
-  private applyTranslation(
-    data: PathSegment[][],
-    rowIndex: number,
-    itemIndex: number,
-    offset: number
-  ): PathSegment[][] {
-    const updated = [...data]
-    const row = [...data[rowIndex]]
-    const item = row[itemIndex]
-    row[itemIndex] = {
-      ...item,
-      start: item.start + offset,
-      end: item.end + offset
-    }
-    updated[rowIndex] = row
-    return updated
   }
 
   setContainerLayout(layout: Layout): void {
@@ -113,7 +96,7 @@ export class GestureCoordinator {
   }
 
   onBegin(gesture: BeginGesture): void {
-    if (this.root.getBusy()) return
+    if (this.root.isProcessing()) return
     const layout = this.containerLayout
     if (!layout) return
 

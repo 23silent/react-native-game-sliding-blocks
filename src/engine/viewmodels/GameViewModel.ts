@@ -16,6 +16,35 @@ import type { GameStateSnapshot } from '../state'
 import { getLayoutVersion } from '../state'
 import { runTaskApplyPipeline } from './TaskPipeline'
 
+type ComboState = {
+  streak: number
+  multiplier: number
+  score: number
+}
+
+const applyScore = (
+  state: ComboState,
+  removedCellsScore: number
+): ComboState => {
+  if (removedCellsScore <= 0) {
+    return {
+      streak: 0,
+      multiplier: 1,
+      score: state.score
+    }
+  }
+
+  const streak = state.streak + 1
+  const multiplier = Math.min(streak, 5)
+  const score = state.score + removedCellsScore * multiplier
+
+  return {
+    streak,
+    multiplier,
+    score
+  }
+}
+
 /**
  * GameViewModel - Main game presentation logic.
  * Orchestrates ProcessData (model), exposes RxJS streams.
@@ -25,7 +54,7 @@ export class GameViewModel {
   private taskQueue: TaskQueueItem[] = []
   private tempRemoveQueue: Set<string> = new Set()
   private nextOverwriteIndex = 0
-  private busy = false
+  private processing = false
   private rows: PathSegment[][] = []
   private applyVersion = 0
   private comboStreak = 0
@@ -108,11 +137,11 @@ export class GameViewModel {
         this.nextOverwriteIndex = nextOverwriteIndex
         this.items$.next(newItems)
       }
-      this.setBusy(false)
+      this.setProcessing(false)
       this.emitGameStateChange()
     } else {
       this.processData.initializeWithGenerated()
-      this.setBusy(true)
+      this.setProcessing(true)
       this.doProcess()
     }
   }
@@ -121,7 +150,7 @@ export class GameViewModel {
     this.gameOverSubject$.getValue()
 
   getRows = (): PathSegment[][] => this.rows
-  getBusy = (): boolean => this.busy
+  isProcessing = (): boolean => this.processing
 
   getState = (): GameStateSnapshot => {
     const gameOver = this.gameOverSubject$.getValue()
@@ -134,18 +163,35 @@ export class GameViewModel {
     }
   }
 
+  private resetCombo = (): void => {
+    this.comboStreak = 0
+    this.multiplierSubject$.next(1)
+  }
+
+  private applyRemovedCellsScore = (removedCellsScore: number): void => {
+    const currentState: ComboState = {
+      streak: this.comboStreak,
+      multiplier: this.multiplierSubject$.getValue(),
+      score: this.scoreSubject$.getValue()
+    }
+    const nextState = applyScore(currentState, removedCellsScore)
+    this.comboStreak = nextState.streak
+    this.scoreSubject$.next(nextState.score)
+    this.multiplierSubject$.next(nextState.multiplier)
+  }
+
   private emitGameStateChange = (): void => {
     this.onGameStateChange?.(this.getState())
   }
 
-  private getStepCompleteTimeout(step: string): number {
+  private getStepCompleteTimeout(step: 'idle' | 'fit' | 'remove' | 'add' | 'gesture'): number {
     return step === 'remove'
       ? this.anim.removeFadeMs + 50
       : this.anim.itemDropMs + 50
   }
 
-  setBusy = (busy: boolean): void => {
-    this.busy = busy
+  setProcessing = (isProcessing: boolean): void => {
+    this.processing = isProcessing
   }
 
   setActiveItem = (item?: ActiveItem): void =>
@@ -157,7 +203,7 @@ export class GameViewModel {
 
   onCompleteGesture = (rows: PathSegment[][]): void => {
     this.applyGestureResultSync(rows)
-    this.setBusy(true)
+    this.setProcessing(true)
     this.processData.setSegments(rows, 'gesture')
     this.doProcess()
   }
@@ -198,21 +244,24 @@ export class GameViewModel {
     } else {
       this.scoreSubject$.next(0)
     }
-    this.multiplierSubject$.next(1)
-    this.comboStreak = 0
+    this.resetCombo()
 
     this.setActiveItem(undefined)
 
-    this.setBusy(false)
+    this.setProcessing(false)
     this.processData.initializeWithGenerated()
-    this.setBusy(true)
+    this.setProcessing(true)
     this.doProcess()
     this.emitGameStateChange()
   }
 
+  /**
+   * Applies a batch of prepared tasks through the animation pipeline, updating
+   * board rows, items map, score and combo state.
+   */
   private applyTask = async (tasks: ReturnType<typeof prepareTasks>) => {
     const versionAtStart = this.applyVersion
-    this.setBusy(true)
+    this.setProcessing(true)
     let hasRemoves = false
     const { keysSize: _keysSize, rowsCount } = this.config
 
@@ -227,13 +276,9 @@ export class GameViewModel {
         task,
         stepComplete$: this.stepComplete$,
         getStepCompleteTimeout: this.getStepCompleteTimeout.bind(this),
-        onScoreUpdate: (score) => {
-          this.comboStreak++
-          const multiplier = Math.min(this.comboStreak, 5)
-          const scoreGained = score * multiplier
-          this.scoreSubject$.next(this.scoreSubject$.getValue() + scoreGained)
-          this.multiplierSubject$.next(multiplier)
-          hasRemoves = true
+        onScoreUpdate: removedCellsScore => {
+          this.applyRemovedCellsScore(removedCellsScore)
+          hasRemoves = removedCellsScore > 0
         },
         onApplyState: (nextOverwriteIndex, rows, newItems) => {
           this.nextOverwriteIndex = nextOverwriteIndex
@@ -248,15 +293,14 @@ export class GameViewModel {
 
     if (this.rows.filter(row => row.length).length === rowsCount) {
       this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
-      this.setBusy(false)
+      this.setProcessing(false)
       this.emitGameStateChange()
       return
     }
     if (this.applyVersion !== versionAtStart) return
 
     if (!hasRemoves) {
-      this.comboStreak = 0
-      this.multiplierSubject$.next(1)
+      this.resetCombo()
       this.emitGameStateChange()
     }
     if (this.tempRemoveQueue.size) {
@@ -267,11 +311,11 @@ export class GameViewModel {
       this.items$.next(newItems)
       this.tempRemoveQueue.clear()
     }
-    this.setBusy(false)
+    this.setProcessing(false)
   }
 
   private stopProcessing = (): void => {
-    this.setBusy(false)
+    this.setProcessing(false)
     const taskQueue = [...this.taskQueue]
     this.taskQueue = []
     const prepared = prepareTasks(
@@ -284,8 +328,12 @@ export class GameViewModel {
   }
 
   private doProcess = (): void => {
-    if (!this.busy) return
-    while (this.busy) {
+    /**
+     * Feeds processor jobs into the task queue until an 'idle' step is reached,
+     * then hands off to stopProcessing to run the prepared tasks.
+     */
+    if (!this.processing) return
+    while (this.processing) {
       const {
         data: rows,
         toRemove,

@@ -1,0 +1,2 @@
+cd /Users/user/work/react-native-game-sliding-blocks/example
+open -a "Android Studio" android
