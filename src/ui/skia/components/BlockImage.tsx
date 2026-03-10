@@ -70,7 +70,6 @@ export function BlockImage({
   )
 
   const fillPaint = useMemo(() => Skia.Paint(), [])
-  const frostPaint = useMemo(() => Skia.Paint(), [])
   const strokePaint = useMemo(() => Skia.Paint(), [])
   const recorder = useMemo(() => Skia.PictureRecorder(), [])
 
@@ -127,7 +126,6 @@ export function BlockImage({
     height,
     recorder,
     fillPaint,
-    frostPaint,
     strokePaint,
     blockSettings,
     blockTheme

@@ -1,11 +1,11 @@
-import type { PathSegment } from './types'
+import type { Board, PathSegment } from './types'
 
 export const remove = (
-  input: PathSegment[][],
+  input: Board,
   columnsCount: number
 ): {
-  data: PathSegment[][]
-  toRemove: PathSegment[][]
+  data: Board
+  toRemove: Board
   hasChanges: boolean
 } => {
   const fulfilledRows = input.map(row => {

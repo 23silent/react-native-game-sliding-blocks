@@ -3,9 +3,9 @@ import {
   isIdleSlot,
   PathSegment,
   PathSegmentExt,
+  type ProcessorStep,
   SegmentState,
-  TaskQueueItem
-} from './types'
+  TaskQueueItem} from './types'
 
 const assignItemsToSlots = (
   itemsMap: Record<string, PathSegmentExt>,
@@ -69,7 +69,7 @@ export const prepareTasks = (
   const newState: Array<{
     rows: PathSegment[][]
     newState: Record<string, PathSegmentExt | undefined>
-    step: string
+    step: ProcessorStep
     nextOverwriteIndex: number
     score: number
   }> = []

@@ -10,6 +10,11 @@ export enum SegmentState {
   Removing = 'removing'
 }
 
+/**
+ * Single horizontal block on the board.
+ *
+ * Coordinates are expressed in column indices: [start, end).
+ */
 export type PathSegment = {
   id: string
   start: number
@@ -17,6 +22,12 @@ export type PathSegment = {
   color: string
   super: boolean
 }
+
+/** One logical row of segments on the board. */
+export type BoardRow = PathSegment[]
+
+/** Full board representation: top row first, bottom row last. */
+export type Board = BoardRow[]
 
 export type PathSegmentExt = PathSegment & {
   rowIndex: number
@@ -35,13 +46,13 @@ export type ProcessorStep = 'idle' | 'fit' | 'remove' | 'add' | 'gesture'
 
 export type ProcessorState = {
   step: ProcessorStep
-  data: PathSegment[][]
+  data: Board
   hasChanges: boolean
   shouldAdd: boolean
 }
 
 export type ProcessJobResult = {
-  data: PathSegment[][]
+  data: Board
   toRemove?: PathSegment[][]
   idsToRemove?: string[]
   hasChanges: boolean
